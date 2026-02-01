@@ -14,9 +14,10 @@ import {
   HelpCircle,
   LogOut,
   Mail,
-  RefreshCw
+  RefreshCw,
+  User
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -24,103 +25,113 @@ export function ProfilePage() {
   const { user: tgUser, apiUser, orders, refreshUser } = useTelegram();
   const { theme, toggleTheme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refreshUser();
-    setTimeout(() => setRefreshing(false), 500);
+    try {
+      await refreshUser();
+    } finally {
+      setTimeout(() => setRefreshing(false), 600);
+    }
   };
 
-  // Ma'lumotlarni birlashtirish
+  // Fallback avatar uchun harfni tayyorlash
+  const getAvatarLetter = () => {
+    if (tgUser?.first_name) return tgUser.first_name[0].toUpperCase();
+    if (tgUser?.username) return tgUser.username.replace('@', '')[0].toUpperCase();
+    return 'U';
+  };
+
+  // photo_url bor-yo'qligini tekshirish (debug uchun)
+  useEffect(() => {
+    if (tgUser) {
+      console.log('Telegram User:', tgUser);
+      console.log('photo_url exists?', !!tgUser.photo_url);
+    }
+  }, [tgUser]);
+
   const userBalance = Number(apiUser?.balance || 0);
   const totalStarsSpent = orders?.reduce((sum, order) => {
     return sum + (Number(order.amount) || 0);
   }, 0) || 0;
 
   const menuItems = [
-    {
-      icon: Settings,
-      label: 'Sozlamalar',
-      onClick: () => {},
-      badge: null
-    },
-    {
-      icon: HelpCircle,
-      label: 'Yordam',
-      onClick: () => {},
-      badge: null
-    },
-    {
-      icon: Mail,
-      label: 'Biz bilan ulanish',
-      onClick: () => {},
-      badge: null
-    }
+    { icon: Settings, label: 'Sozlamalar', onClick: () => {}, badge: null },
+    { icon: HelpCircle, label: 'Yordam', onClick: () => {}, badge: null },
+    { icon: Mail, label: 'Biz bilan ulanish', onClick: () => {}, badge: null },
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <TopBar 
-        title="Profile" 
-        subtitle="Manage your account"
+        title="Profil" 
+        subtitle="Hisobingizni boshqarish"
         action={
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="w-9 h-9 rounded-full bg-accent flex items-center justify-center hover:bg-accent/80 transition-colors"
+            className="w-9 h-9 rounded-full bg-accent flex items-center justify-center hover:bg-accent/80 transition-colors disabled:opacity-50"
+            aria-label="Ma'lumotlarni yangilash"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         }
       />
 
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 pb-20">
         {/* User Card */}
-        <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/20 to-transparent p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white text-3xl ring-4 ring-background overflow-hidden">
-                {tgUser?.photo_url ? (
-                  <img 
-                    src={tgUser.photo_url} 
-                    alt={tgUser?.first_name || 'User'} 
+        <Card className="overflow-hidden border-none shadow-lg">
+          <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
+            <div className="flex items-center gap-4 mb-5">
+              {/* Avatar */}
+              <div className="relative w-20 h-20 rounded-full ring-4 ring-background/80 overflow-hidden bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-4xl font-bold shadow-md">
+                {!imageFailed && tgUser?.photo_url ? (
+                  <img
+                    src={tgUser.photo_url}
+                    alt={`${tgUser.first_name || 'Foydalanuvchi'} rasmi`}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Agar rasm yuklanmasa, harfni ko'rsatish
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement.innerHTML = `<span>${(tgUser?.first_name?.[0] || 'U').toUpperCase()}</span>`;
-                    }}
+                    onError={() => setImageFailed(true)}
+                    crossOrigin="anonymous"
                   />
                 ) : (
-                  <span>{(tgUser?.first_name?.[0] || 'U').toUpperCase()}</span>
+                  <span>{getAvatarLetter()}</span>
+                )}
+
+                {/* Fallback icon (ekstremal holat uchun) */}
+                {imageFailed && !tgUser?.photo_url && (
+                  <User className="w-10 h-10 opacity-80" />
                 )}
               </div>
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl font-medium truncate">
-                    {tgUser?.first_name || 'User'} {tgUser?.last_name || ''}
+                  <h2 className="text-xl font-semibold truncate">
+                    {tgUser?.first_name || 'Foydalanuvchi'} {tgUser?.last_name || ''}
                   </h2>
-                  {appUser.isAdmin && (
-                    <Badge variant="gold" className="gap-1 text-[10px]">
+                  {appUser?.isAdmin && (
+                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30 text-xs gap-1">
                       <Shield className="w-3 h-3" />
                       Admin
                     </Badge>
                   )}
                 </div>
-                <p className="text-muted-foreground">{tgUser?.username || '@username'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {tgUser?.username || '@username mavjud emas'}
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-background/50 backdrop-blur-sm rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Hisoningiz</p>
-                <p className="font-medium">
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="bg-background/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                <p className="text-xs text-muted-foreground mb-1">Hisobingiz</p>
+                <p className="text-lg font-semibold">
                   {new Intl.NumberFormat('uz-UZ', { notation: 'compact' }).format(userBalance)} UZS
                 </p>
               </div>
-              <div className="bg-background/50 backdrop-blur-sm rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Ishlatilgan Starslar</p>
-                <p className="font-medium">
+              <div className="bg-background/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                <p className="text-xs text-muted-foreground mb-1">Ishlatilgan Stars</p>
+                <p className="text-lg font-semibold">
                   {new Intl.NumberFormat('uz-UZ', { notation: 'compact' }).format(totalStarsSpent)} ⭐
                 </p>
               </div>
@@ -130,25 +141,25 @@ export function ProfilePage() {
 
         {/* Account Info */}
         <Card>
-          <CardContent className="pt-4 space-y-3">
-            <h3 className="font-medium mb-3">Siz haqingizda</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between py-2 border-b border-border">
+          <CardContent className="pt-5 space-y-4">
+            <h3 className="font-semibold text-lg mb-2">Ma'lumotlar</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between py-2 border-b border-border/60">
                 <span className="text-muted-foreground">User ID</span>
-                <span className="font-mono">{tgUser?.id || 'N/A'}</span>
+                <span className="font-mono font-medium">{tgUser?.id || '—'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border/60">
                 <span className="text-muted-foreground">Username</span>
-                <span>{tgUser?.username || 'Not set'}</span>
+                <span className="font-medium">{tgUser?.username || 'O‘rnatilmagan'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Umumiy buyurtmalar</span>
-                <span className="font-medium">{orders?.length || 0}</span>
+              <div className="flex justify-between py-2 border-b border-border/60">
+                <span className="text-muted-foreground">Buyurtmalar soni</span>
+                <span className="font-medium">{orders?.length || 0} ta</span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-muted-foreground">Account Turi</span>
-                <Badge variant={tgUser?.isTelegram ? 'success' : 'default'}>
-                  {tgUser?.isTelegram ? 'Telegram' : 'Web'}
+                <span className="text-muted-foreground">Hisob turi</span>
+                <Badge variant={tgUser?.isTelegram ? 'default' : 'secondary'}>
+                  {tgUser?.isTelegram ? 'Telegram' : 'Veb'}
                 </Badge>
               </div>
             </div>
@@ -157,28 +168,29 @@ export function ProfilePage() {
 
         {/* Theme Toggle */}
         <Card>
-          <CardContent className="pt-4">
+          <CardContent className="pt-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {theme === 'dark' ? (
                   <Moon className="w-5 h-5 text-primary" />
                 ) : (
-                  <Sun className="w-5 h-5 text-telegram-gold" />
+                  <Sun className="w-5 h-5 text-amber-500" />
                 )}
                 <div>
                   <p className="font-medium">Mavzu</p>
-                  <p className="text-sm text-muted-foreground capitalize">{theme} mode</p>
+                  <p className="text-sm text-muted-foreground capitalize">{theme} rejimi</p>
                 </div>
               </div>
               <button
                 onClick={toggleTheme}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  theme === 'dark' ? 'bg-primary' : 'bg-input'
+                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
+                  theme === 'dark' ? 'bg-primary' : 'bg-muted'
                 }`}
+                aria-label="Mavzuni o‘zgartirish"
               >
                 <span 
-                  className={`block w-5 h-5 bg-background rounded-full shadow-sm transition-transform ${
-                    theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-background rounded-full shadow-md transition-transform duration-300 ${
+                    theme === 'dark' ? 'translate-x-6' : 'translate-x-0'
                   }`}
                 />
               </button>
@@ -186,21 +198,20 @@ export function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Admin Panel Access */}
-        {appUser.isAdmin && (
+        {appUser?.isAdmin && (
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow border-primary/30 bg-gradient-to-br from-primary/5 to-transparent"
+            className="cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-gradient-to-r from-primary/5 to-transparent"
             onClick={() => navigate('/admin')}
           >
-            <CardContent className="pt-4">
+            <CardContent className="pt-5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">Admin Panel</p>
-                    <p className="text-sm text-muted-foreground">Manage rates & leaderboards</p>
+                    <p className="font-semibold">Admin panel</p>
+                    <p className="text-sm text-muted-foreground">Narxlar va reytinglarni boshqarish</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -209,24 +220,23 @@ export function ProfilePage() {
           </Card>
         )}
 
-        {/* Menu Items */}
-        <div className="space-y-2">
-          {menuItems.map((item, index) => {
+        <div className="space-y-3">
+          {menuItems.map((item, i) => {
             const Icon = item.icon;
             return (
               <Card
-                key={index}
+                key={i}
                 onClick={item.onClick}
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
               >
-                <CardContent className="pt-4">
+                <CardContent className="pt-5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <Icon className="w-5 h-5 text-muted-foreground" />
                       <p className="font-medium">{item.label}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {item.badge && <Badge variant="default">{item.badge}</Badge>}
+                    <div className="flex items-center gap-3">
+                      {item.badge && <Badge variant="secondary">{item.badge}</Badge>}
                       <ChevronRight className="w-5 h-5 text-muted-foreground" />
                     </div>
                   </div>
@@ -237,19 +247,18 @@ export function ProfilePage() {
         </div>
 
         {/* Logout */}
-        <Card className="border-destructive/30">
-          <CardContent className="pt-4">
-            <button className="w-full flex items-center justify-center gap-2 text-destructive">
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardContent className="pt-5">
+            <button className="w-full flex items-center justify-center gap-3 text-destructive font-medium py-2">
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">Chiqish</span>
+              <span>Chiqish</span>
             </button>
           </CardContent>
         </Card>
 
-        {/* App Version */}
-        <div className="text-center text-sm text-muted-foreground pb-4">
-          <p>Stars Market v1.0.0</p>
-          <p className="text-xs mt-1">Made with ❤️ @qiyossiz</p>
+        <div className="text-center text-sm text-muted-foreground pt-4 pb-8">
+          <p>Stars Market • v1.0.0</p>
+          <p className="text-xs mt-1">Made with ❤️ by @qiyossiz</p>
         </div>
       </div>
     </div>
