@@ -17,7 +17,8 @@ const PRESET_AMOUNTS = [50, 100, 250, 500, 1000];
 
 export function BuyStarsPage() {
   const navigate = useNavigate();
-  const { apiUser, createOrder, refreshUser, checkUsername } = useTelegram();
+  // user ni ham olamiz — Telegram WebApp dan kelgan ma'lumotlar
+  const { apiUser, user, createOrder, refreshUser, checkUsername } = useTelegram();
   
   const [username, setUsername] = useState('');
   const [stars, setStars] = useState(100);
@@ -56,7 +57,7 @@ export function BuyStarsPage() {
 
     fetchRate();
     
-    // Har 60 sekundda kursni yangilash (ixtiyoriy)
+    // Har 60 sekundda kursni yangilash
     const interval = setInterval(fetchRate, 60000);
     
     return () => clearInterval(interval);
@@ -112,7 +113,6 @@ export function BuyStarsPage() {
   const handleConfirmPayment = async () => {
     if (!username) return;
     
-    // Balans tekshirish
     if (!hasEnoughBalance) {
       toast.error("Mablag' yetarli emas", {
         description: `Sizda ${new Intl.NumberFormat('uz-UZ').format(userBalance)} UZS bor, lekin ${new Intl.NumberFormat('uz-UZ').format(totalCost)} UZS kerak`
@@ -123,7 +123,6 @@ export function BuyStarsPage() {
     setIsProcessing(true);
     
     try {
-      // Real API ga so'rov yuborish
       const result = await createOrder({
         amount: stars,
         sent: username,
@@ -136,7 +135,6 @@ export function BuyStarsPage() {
           description: `${stars} stars @${username} ga yuborildi`
         });
 
-        // Ma'lumotlarni yangilash
         await refreshUser();
 
         setShowConfirmDialog(false);
@@ -148,7 +146,6 @@ export function BuyStarsPage() {
         setStars(100);
         setSelectedPreset(100);
 
-        // Navigate to history after a short delay
         setTimeout(() => {
           navigate('/history');
         }, 1000);
@@ -167,21 +164,24 @@ export function BuyStarsPage() {
     }
   };
 
+  // O'z username'ini kiritish funksiyasi
   const handleSelfUsername = () => {
-    if (!apiUser?.username) {
+    let myUsername = user?.username;
+
+    if (!myUsername) {
       toast.error("Username topilmadi", {
-        description: "Profil ma'lumotlaringizda username mavjud emas"
+        description: "Telegram profilingizda username o'rnatilmagan"
       });
       return;
     }
 
-    // @ belgisini olib tashlaymiz agar bo'lsa
-    let cleanUsername = apiUser.username;
-    if (cleanUsername.startsWith('@')) {
-      cleanUsername = cleanUsername.slice(1);
+    // @ belgisini olib tashlaymiz
+    if (myUsername.startsWith('@')) {
+      myUsername = myUsername.slice(1);
     }
 
-    handleUsernameCheck(cleanUsername);
+    // Inputga yozamiz va tekshirishni boshlaymiz
+    handleUsernameCheck(myUsername);
   };
 
   return (
