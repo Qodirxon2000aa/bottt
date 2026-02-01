@@ -215,16 +215,21 @@ useEffect(() => {
   const telegram = window.Telegram?.WebApp;
   const tgUser = getTelegramUser();
 
+  const isTelegramEnv =
+    telegram &&
+    typeof telegram.initData === "string" &&
+    telegram.initData.length > 0;
+
   if (telegram) {
     telegram.ready();
     telegram.expand();
   }
 
   // ============================================
-  // ✅ REAL TELEGRAM USER
+  // ✅ TELEGRAM MUHITI BOR
   // ============================================
-  if (tgUser?.id) {
-    console.log("✅ TELEGRAM USER DETECTED");
+  if (isTelegramEnv && tgUser?.id) {
+    console.log("✅ REAL TELEGRAM USER");
     console.log("📱 ID:", tgUser.id);
 
     const realUserData = {
@@ -239,19 +244,17 @@ useEffect(() => {
     setUser(realUserData);
 
     (async () => {
-      console.log("📡 Fetching API user by telegram ID:", tgUser.id);
       await fetchUserFromApi(tgUser.id);
       await fetchOrders(tgUser.id);
       await fetchPayments(tgUser.id);
-      console.log("✅ API DATA LOADED");
     })();
   }
 
   // ============================================
-  // ⚠️ DEV MODE
+  // ⚠️ FAQAT HAQIQIY BRAUZERDA DEV MODE
   // ============================================
   else {
-    console.warn("⚠️ NOT IN TELEGRAM — DEV MODE");
+    console.warn("⚠️ DEV MODE (REAL TELEGRAM EMAS)");
 
     const fakeId = "7521806735";
 
@@ -271,6 +274,7 @@ useEffect(() => {
     })();
   }
 }, []);
+
 
 
   return (
