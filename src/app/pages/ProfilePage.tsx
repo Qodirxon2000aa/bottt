@@ -25,7 +25,6 @@ export function ProfilePage() {
   const { user: tgUser, apiUser, orders, refreshUser } = useTelegram();
   const { theme, toggleTheme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -43,13 +42,13 @@ export function ProfilePage() {
     return 'U';
   };
 
-  // photo_url bor-yo'qligini tekshirish (debug uchun)
+  // Debug uchun console log
   useEffect(() => {
-    if (tgUser) {
-      console.log('Telegram User:', tgUser);
-      console.log('photo_url exists?', !!tgUser.photo_url);
-    }
-  }, [tgUser]);
+    console.log('👤 Profile Page Data:');
+    console.log('   - tgUser:', tgUser);
+    console.log('   - apiUser:', apiUser);
+    console.log('   - orders:', orders);
+  }, [tgUser, apiUser, orders]);
 
   const userBalance = Number(apiUser?.balance || 0);
   const totalStarsSpent = orders?.reduce((sum, order) => {
@@ -86,21 +85,21 @@ export function ProfilePage() {
             <div className="flex items-center gap-4 mb-5">
               {/* Avatar */}
               <div className="relative w-20 h-20 rounded-full ring-4 ring-background/80 overflow-hidden bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-4xl font-bold shadow-md">
-                {!imageFailed && tgUser?.photo_url ? (
+                {tgUser?.photo_url ? (
                   <img
                     src={tgUser.photo_url}
-                    alt={`${tgUser.first_name || 'Foydalanuvchi'} rasmi`}
+                    alt={`${tgUser.first_name || 'Foydalanuvchi'} avatar`}
                     className="w-full h-full object-cover"
-                    onError={() => setImageFailed(true)}
-                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.log('❌ Avatar yuklanmadi:', tgUser.photo_url);
+                      e.target.style.display = 'none';
+                    }}
                   />
-                ) : (
-                  <span>{getAvatarLetter()}</span>
-                )}
-
-                {/* Fallback icon (ekstremal holat uchun) */}
-                {imageFailed && !tgUser?.photo_url && (
-                  <User className="w-10 h-10 opacity-80" />
+                ) : null}
+                
+                {/* Fallback - agar rasm bo'lmasa yoki yuklanmasa */}
+                {!tgUser?.photo_url && (
+                  <span className="select-none">{getAvatarLetter()}</span>
                 )}
               </div>
 
@@ -117,7 +116,7 @@ export function ProfilePage() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {tgUser?.username || '@username mavjud emas'}
+                  {tgUser?.username || 'Username yo\'q'}
                 </p>
               </div>
             </div>
@@ -126,13 +125,13 @@ export function ProfilePage() {
               <div className="bg-background/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">Hisobingiz</p>
                 <p className="text-lg font-semibold">
-                  {new Intl.NumberFormat('uz-UZ', { notation: 'compact' }).format(userBalance)} UZS
+                  {userBalance.toLocaleString('uz-UZ')} UZS
                 </p>
               </div>
               <div className="bg-background/60 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">Ishlatilgan Stars</p>
                 <p className="text-lg font-semibold">
-                  {new Intl.NumberFormat('uz-UZ', { notation: 'compact' }).format(totalStarsSpent)} ⭐
+                  {totalStarsSpent.toLocaleString('uz-UZ')} ⭐
                 </p>
               </div>
             </div>
@@ -150,7 +149,7 @@ export function ProfilePage() {
               </div>
               <div className="flex justify-between py-2 border-b border-border/60">
                 <span className="text-muted-foreground">Username</span>
-                <span className="font-medium">{tgUser?.username || 'O‘rnatilmagan'}</span>
+                <span className="font-medium">{tgUser?.username || 'Yo\'q'}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border/60">
                 <span className="text-muted-foreground">Buyurtmalar soni</span>
@@ -186,7 +185,7 @@ export function ProfilePage() {
                 className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
                   theme === 'dark' ? 'bg-primary' : 'bg-muted'
                 }`}
-                aria-label="Mavzuni o‘zgartirish"
+                aria-label="Mavzuni o'zgartirish"
               >
                 <span 
                   className={`absolute top-0.5 left-0.5 w-5 h-5 bg-background rounded-full shadow-md transition-transform duration-300 ${
@@ -198,6 +197,7 @@ export function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Admin Panel */}
         {appUser?.isAdmin && (
           <Card 
             className="cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-gradient-to-r from-primary/5 to-transparent"
@@ -220,6 +220,7 @@ export function ProfilePage() {
           </Card>
         )}
 
+        {/* Menu Items */}
         <div className="space-y-3">
           {menuItems.map((item, i) => {
             const Icon = item.icon;
@@ -256,6 +257,7 @@ export function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Footer */}
         <div className="text-center text-sm text-muted-foreground pt-4 pb-8">
           <p>Stars Market • v1.0.0</p>
           <p className="text-xs mt-1">Made with ❤️ by @qiyossiz</p>
