@@ -144,7 +144,7 @@ export function HomePage() {
         <div className="grid grid-cols-3 gap-3">
           <Card 
             className="cursor-pointer hover:shadow-md transition-all active:scale-95"
-            onClick={() => navigate('/stars')}
+            onClick={() => navigate('/buy')}
           >
             <CardContent className="pt-5 text-center">
               <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-3">
