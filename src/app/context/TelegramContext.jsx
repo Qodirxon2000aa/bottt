@@ -185,28 +185,26 @@ export const TelegramProvider = ({ children }) => {
     fetchedRef.current = true;
 
     const telegram = window.Telegram?.WebApp;
-    
-    // Telegram Web App mavjudligini tekshirish
-    if (telegram) {
-      telegram.ready();
-      telegram.expand();
-      console.log("📱 Telegram WebApp initialized");
-    }
-
     const tgUser = telegram?.initDataUnsafe?.user;
     
     // ============================================
-    // TELEGRAM WEB APP ORQALI KIRILSA
+    // ✅ TELEGRAM WEB APP ORQALI KIRILSA
     // ============================================
     if (tgUser?.id) {
-      console.log("✅ Real Telegram user detected:");
-      console.log("   - Telegram ID:", tgUser.id);
-      console.log("   - First Name:", tgUser.first_name);
-      console.log("   - Username:", tgUser.username);
+      // Telegram Web App ni tayyor qilish
+      if (telegram) {
+        telegram.ready();
+        telegram.expand();
+      }
       
-      // 1️⃣ Telegram user ma'lumotlarini saqlash
-      const userData = {
-        id: String(tgUser.id), // Telegram ID
+      console.log("✅ REAL TELEGRAM USER:");
+      console.log("   📱 ID:", tgUser.id);
+      console.log("   👤 Name:", tgUser.first_name);
+      console.log("   🔗 Username:", tgUser.username || "yo'q");
+      
+      // Real Telegram user ma'lumotlarini saqlash
+      const realUserData = {
+        id: String(tgUser.id),
         first_name: tgUser.first_name || "",
         last_name: tgUser.last_name || "",
         username: tgUser.username ? `@${tgUser.username}` : "",
@@ -214,25 +212,27 @@ export const TelegramProvider = ({ children }) => {
         isTelegram: true,
       };
       
-      setUser(userData);
+      setUser(realUserData);
       
-      // 2️⃣ Telegram ID orqali API dan ma'lumotlarni olish
+      // Real user ID bilan API dan ma'lumotlarni yuklash
       (async () => {
-        console.log(`🔍 Fetching data for Telegram ID: ${tgUser.id}`);
-        await fetchUserFromApi(tgUser.id);  // ✅ Telegram ID
-        await fetchOrders(tgUser.id);        // ✅ Telegram ID
-        await fetchPayments(tgUser.id);      // ✅ Telegram ID
-        console.log("✅ All data loaded successfully!");
+        console.log(`🔍 Loading data for Telegram user: ${tgUser.id}`);
+        await fetchUserFromApi(tgUser.id);
+        await fetchOrders(tgUser.id);
+        await fetchPayments(tgUser.id);
+        console.log("✅ Real user data loaded!");
       })();
     } 
     // ============================================
-    // BRAUZERDA OCHILSA - FAKE DATA
+    // ⚠️ BRAUZERDA OCHILSA - DEV MODE (FAKE DATA)
     // ============================================
     else {
-      console.log("⚠️ Not in Telegram - Using dev mode");
-      console.log("   - Using fake ID: 7521806735");
+      console.log("⚠️ DEV MODE ACTIVE - NOT IN TELEGRAM");
+      console.log("   🧪 Using fake test user");
+      console.log("   📱 Fake ID: 7521806735");
       
-      const devUser = {
+      // Fake dev user ma'lumotlari
+      const fakeDevUser = {
         id: "7521806735",
         first_name: "Qodirxon",
         last_name: "Dev",
@@ -241,13 +241,15 @@ export const TelegramProvider = ({ children }) => {
         isTelegram: false,
       };
       
-      setUser(devUser);
+      setUser(fakeDevUser);
       
       // Fake user ID bilan ma'lumotlarni yuklash
       (async () => {
+        console.log("🧪 Loading fake dev data...");
         await fetchUserFromApi("7521806735");
         await fetchOrders("7521806735");
         await fetchPayments("7521806735");
+        console.log("✅ Fake dev data loaded!");
       })();
     }
   }, []);
