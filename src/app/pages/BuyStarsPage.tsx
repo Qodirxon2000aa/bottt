@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useApp, TelegramProfile } from '@/app/context/AppContext';
+import { useTelegram } from '@/app/context/TelegramContext';
 import { TopBar } from '@/app/components/ui/TopBar';
 import { Card, CardContent } from '@/app/components/ui/Card';
 import { Button } from '@/app/components/ui/Button';
@@ -9,7 +10,7 @@ import { MessageBox } from '@/app/components/ui/EmptyState';
 import { UsernameInput } from '@/app/components/UsernameInput';
 import { StarsStepper } from '@/app/components/StarsStepper';
 import { SummaryCard } from '@/app/components/SummaryCard';
-import { ArrowLeft, Sparkles, Bookmark } from 'lucide-react';
+import { ArrowLeft, Sparkles, Bookmark, AlertCircle } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
 
@@ -17,7 +18,8 @@ const PRESET_AMOUNTS = [50, 100, 250, 500, 1000];
 
 export function BuyStarsPage() {
   const navigate = useNavigate();
-  const { currentRate, addTransaction } = useApp();
+  const { currentRate } = useApp();
+  const { apiUser, createOrder, refreshUser } = useTelegram();
   
   const [username, setUsername] = useState('');
   const [foundProfile, setFoundProfile] = useState<TelegramProfile | null>(null);
@@ -37,40 +39,65 @@ export function BuyStarsPage() {
   };
 
   const canProceed = username.length > 0 && foundProfile?.status === 'found' && stars > 0;
+  
+  // Balansni tekshirish
+  const userBalance = Number(apiUser?.balance || 0);
+  const totalCost = stars * currentRate;
+  const hasEnoughBalance = userBalance >= totalCost;
 
   const handleConfirmPayment = async () => {
     if (!foundProfile || foundProfile.status !== 'found') return;
+    if (!hasEnoughBalance) {
+      toast.error('Insufficient balance', {
+        description: 'Please top up your balance first'
+      });
+      return;
+    }
 
     setIsProcessing(true);
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    addTransaction({
-      recipientUsername: foundProfile.username,
-      recipientDisplayName: foundProfile.displayName,
-      stars,
-      rateUZS: currentRate,
-      totalUZS: stars * currentRate
-    });
+    try {
+      // Real API ga so'rov yuborish
+      const result = await createOrder({
+        amount: stars,
+        sent: foundProfile.username,
+        type: 'stars',
+        overall: totalCost
+      });
 
-    setIsProcessing(false);
-    setShowConfirmDialog(false);
-    
-    toast.success('Payment successful!', {
-      description: `${stars} stars sent to @${foundProfile.username}`
-    });
+      if (result.ok) {
+        toast.success('Payment successful!', {
+          description: `${stars} stars sent to @${foundProfile.username}`
+        });
 
-    // Reset form
-    setUsername('');
-    setFoundProfile(null);
-    setStars(100);
-    setSelectedPreset(100);
+        // Ma'lumotlarni yangilash
+        await refreshUser();
 
-    // Navigate to history after a short delay
-    setTimeout(() => {
-      navigate('/history');
-    }, 1000);
+        setShowConfirmDialog(false);
+        
+        // Reset form
+        setUsername('');
+        setFoundProfile(null);
+        setStars(100);
+        setSelectedPreset(100);
+
+        // Navigate to history after a short delay
+        setTimeout(() => {
+          navigate('/history');
+        }, 1000);
+      } else {
+        toast.error('Payment failed', {
+          description: 'Please try again later'
+        });
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Payment failed', {
+        description: 'An error occurred. Please try again.'
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -89,9 +116,22 @@ export function BuyStarsPage() {
       />
 
       <div className="p-4 space-y-6">
+        {/* Balance Warning */}
+        {!hasEnoughBalance && stars > 0 && (
+          <MessageBox type="error">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              <span>Insufficient balance. You need <strong>{new Intl.NumberFormat('uz-UZ').format(totalCost)} UZS</strong> but have <strong>{new Intl.NumberFormat('uz-UZ').format(userBalance)} UZS</strong></span>
+            </div>
+          </MessageBox>
+        )}
+
         {/* Info Banner */}
         <MessageBox type="info">
-          Current rate: <strong>1 ⭐ = {new Intl.NumberFormat('uz-UZ').format(currentRate)} UZS</strong>
+          <div className="space-y-1">
+            <div>Current rate: <strong>1 ⭐ = {new Intl.NumberFormat('uz-UZ').format(currentRate)} UZS</strong></div>
+            <div className="text-xs">Your balance: <strong>{new Intl.NumberFormat('uz-UZ').format(userBalance)} UZS</strong></div>
+          </div>
         </MessageBox>
 
         {/* Recipient Section */}
@@ -149,11 +189,11 @@ export function BuyStarsPage() {
             variant="primary"
             size="lg"
             fullWidth
-            disabled={!canProceed}
+            disabled={!canProceed || !hasEnoughBalance}
             onClick={() => setShowConfirmDialog(true)}
           >
             <Sparkles className="w-5 h-5" />
-            Pay & Send Stars
+            {!hasEnoughBalance && canProceed ? 'Insufficient Balance' : 'Pay & Send Stars'}
           </Button>
           
           <Button
@@ -208,10 +248,18 @@ export function BuyStarsPage() {
                           <span className="text-muted-foreground">Rate</span>
                           <span className="font-medium">{new Intl.NumberFormat('uz-UZ').format(currentRate)} UZS</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Your Balance</span>
+                          <span className="font-medium">{new Intl.NumberFormat('uz-UZ').format(userBalance)} UZS</span>
+                        </div>
                         <div className="h-px bg-border my-2" />
                         <div className="flex justify-between text-base">
                           <span className="font-medium">Total</span>
-                          <span className="font-bold">{new Intl.NumberFormat('uz-UZ').format(stars * currentRate)} UZS</span>
+                          <span className="font-bold">{new Intl.NumberFormat('uz-UZ').format(totalCost)} UZS</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-success">
+                          <span>Remaining Balance</span>
+                          <span className="font-medium">{new Intl.NumberFormat('uz-UZ').format(userBalance - totalCost)} UZS</span>
                         </div>
                       </div>
                     </CardContent>

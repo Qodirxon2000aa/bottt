@@ -1,20 +1,48 @@
 import { useNavigate } from 'react-router';
 import { useApp } from '@/app/context/AppContext';
+import { useTelegram } from '@/app/context/TelegramContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/Card';
 import { Button } from '@/app/components/ui/Button';
 import { Badge } from '@/app/components/ui/Badge';
-import { Sparkles, TrendingUp, Trophy, Clock, Wallet, ArrowRight, Gift } from 'lucide-react';
+import { Sparkles, TrendingUp, Trophy, Clock, Wallet, ArrowRight, Gift, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import { useState } from 'react';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { user, currentRate, lastRateUpdate, transactions, contest } = useApp();
+  const { currentRate, lastRateUpdate, contest } = useApp();
+  const { user: tgUser, apiUser, orders, loading, refreshUser } = useTelegram();
+  const [refreshing, setRefreshing] = useState(false);
 
   const formatUZS = (amount: number) => {
     return new Intl.NumberFormat('uz-UZ').format(amount);
   };
 
-  const recentTransactions = transactions.slice(0, 3);
+  // API dan kelgan ma'lumotlarni ishlatish
+  const userBalance = Number(apiUser?.balance || 0);
+  const recentTransactions = orders?.slice(0, 3) || [];
+
+  // Umumiy stars hisoblash
+  const totalStarsSpent = orders?.reduce((sum, order) => {
+    return sum + (Number(order.amount) || 0);
+  }, 0) || 0;
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshUser();
+    setTimeout(() => setRefreshing(false), 500);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-4">
@@ -24,11 +52,20 @@ export function HomePage() {
           <div>
             <h1 className="text-2xl mb-1">Stars Market</h1>
             <p className="text-sm text-muted-foreground">
-              Welcome, {user.displayName}
+              Welcome, {tgUser?.first_name || 'User'}
             </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white text-xl">
-            {user.displayName.charAt(0).toUpperCase()}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="w-10 h-10 rounded-full bg-accent flex items-center justify-center hover:bg-accent/80 transition-colors"
+            >
+              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white text-xl">
+              {(tgUser?.first_name?.[0] || 'U').toUpperCase()}
+            </div>
           </div>
         </div>
 
@@ -43,7 +80,7 @@ export function HomePage() {
               <Badge variant="success">Active</Badge>
             </div>
             <div className="flex items-baseline gap-2 mb-4">
-              <p className="text-3xl font-bold">{formatUZS(user.balanceUZS)}</p>
+              <p className="text-3xl font-bold">{formatUZS(userBalance)}</p>
               <span className="text-muted-foreground">UZS</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
@@ -51,7 +88,7 @@ export function HomePage() {
                 <Sparkles className="w-4 h-4 text-telegram-gold" />
                 <span className="text-sm text-muted-foreground">Stars Purchased</span>
               </div>
-              <span className="font-medium">{formatUZS(user.starsSpent)}</span>
+              <span className="font-medium">{formatUZS(totalStarsSpent)}</span>
             </div>
           </CardContent>
         </Card>
@@ -154,35 +191,35 @@ export function HomePage() {
 
           <div className="space-y-2">
             {recentTransactions.length > 0 ? (
-              recentTransactions.map((tx) => (
-                <Card key={tx.id}>
+              recentTransactions.map((order) => (
+                <Card key={order.id}>
                   <div className="p-3 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white flex-shrink-0">
-                      {tx.recipientDisplayName.charAt(0).toUpperCase()}
+                      {(order.sent?.[0] || 'U').toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{tx.recipientDisplayName}</p>
+                      <p className="font-medium truncate">{order.sent || 'Unknown'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(tx.timestamp, 'MMM d, HH:mm')}
+                        {order.date ? format(new Date(order.date), 'MMM d, HH:mm') : 'N/A'}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-medium">{tx.stars} ⭐</p>
+                      <p className="font-medium">{order.amount || 0} ⭐</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatUZS(tx.totalUZS)} UZS
+                        {formatUZS(Number(order.overall) || 0)} UZS
                       </p>
                     </div>
                     <Badge
                       variant={
-                        tx.status === 'completed'
+                        order.status === 'Completed'
                           ? 'success'
-                          : tx.status === 'pending'
+                          : order.status === 'Pending'
                           ? 'warning'
                           : 'destructive'
                       }
                       className="text-[10px]"
                     >
-                      {tx.status}
+                      {order.status || 'pending'}
                     </Badge>
                   </div>
                 </Card>
