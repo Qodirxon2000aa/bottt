@@ -179,6 +179,41 @@ export const TelegramProvider = ({ children }) => {
     }
   };
 
+  /* ========================= 👤 CHECK USERNAME ========================= */
+  const checkUsername = async (username) => {
+    try {
+      if (!username) return { ok: false, message: "Username kiritilmagan" };
+      
+      // @ belgisini olib tashlash
+      const cleanUsername = username.replace("@", "");
+      
+      const url = `https://tezpremium.uz/starsapi/user.php?username=${cleanUsername}`;
+      console.log("👤 Checking username:", url);
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      console.log("👤 Username check response:", data);
+      
+      if (data.username) {
+        return {
+          ok: true,
+          data: {
+            username: data.username,
+            name: data.name,
+            photo: data.photo,
+            has_premium: data.has_premium
+          }
+        };
+      }
+      
+      return { ok: false, message: "Foydalanuvchi topilmadi" };
+    } catch (err) {
+      console.error("❌ checkUsername error:", err);
+      return { ok: false, message: "Username tekshirishda xatolik" };
+    }
+  };
+
 
 
   // ========================= 📲 TELEGRAM USER GETTER =========================
@@ -186,7 +221,7 @@ const getTelegramUser = () => {
   const tg = window.Telegram?.WebApp;
   if (!tg) return null;
 
-  // 1️⃣ Asosiy va eng ishonchli yo‘l
+  // 1️⃣ Asosiy va eng ishonchli yo'l
   if (tg.initDataUnsafe?.user?.id) {
     return tg.initDataUnsafe.user;
   }
@@ -289,6 +324,7 @@ useEffect(() => {
         createPremiumOrder,
         createGiftOrder,
         refreshUser,
+        checkUsername,
       }}
     >
       {children}
