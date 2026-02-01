@@ -15,13 +15,14 @@ import {
   LogOut,
   Mail,
   RefreshCw,
-  User
+  User,
+  Lock   // ← yangi import – qulf belgisi uchun
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { user: appUser } = useApp();
+  const { user: appUser } = useApp();           // hali ham ishlatilishi mumkin, lekin biz asosan apiUser dan olamiz
   const { user: tgUser, apiUser, orders, refreshUser } = useTelegram();
   const { theme, toggleTheme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
@@ -35,14 +36,12 @@ export function ProfilePage() {
     }
   };
 
-  // Fallback avatar uchun harfni tayyorlash
   const getAvatarLetter = () => {
     if (tgUser?.first_name) return tgUser.first_name[0].toUpperCase();
     if (tgUser?.username) return tgUser.username.replace('@', '')[0].toUpperCase();
     return 'U';
   };
 
-  // Debug uchun console log
   useEffect(() => {
     console.log('👤 Profile Page Data:');
     console.log('   - tgUser:', tgUser);
@@ -60,6 +59,8 @@ export function ProfilePage() {
     { icon: HelpCircle, label: 'Yordam', onClick: () => {}, badge: null },
     { icon: Mail, label: 'Biz bilan ulanish', onClick: () => {}, badge: null },
   ];
+
+  const isAdmin = !!apiUser?.is_admin;   // eng muhim o'zgarish shu yerda
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +84,6 @@ export function ProfilePage() {
         <Card className="overflow-hidden border-none shadow-lg">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6">
             <div className="flex items-center gap-4 mb-5">
-              {/* Avatar */}
               <div className="relative w-20 h-20 rounded-full ring-4 ring-background/80 overflow-hidden bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-4xl font-bold shadow-md">
                 {tgUser?.photo_url ? (
                   <img
@@ -92,12 +92,11 @@ export function ProfilePage() {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       console.log('❌ Avatar yuklanmadi:', tgUser.photo_url);
-                      e.target.style.display = 'none';
+                      e.currentTarget.style.display = 'none';
                     }}
                   />
                 ) : null}
                 
-                {/* Fallback - agar rasm bo'lmasa yoki yuklanmasa */}
                 {!tgUser?.photo_url && (
                   <span className="select-none">{getAvatarLetter()}</span>
                 )}
@@ -108,7 +107,7 @@ export function ProfilePage() {
                   <h2 className="text-xl font-semibold truncate">
                     {tgUser?.first_name || 'Foydalanuvchi'} {tgUser?.last_name || ''}
                   </h2>
-                  {appUser?.isAdmin && (
+                  {isAdmin && (
                     <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30 text-xs gap-1">
                       <Shield className="w-3 h-3" />
                       Admin
@@ -197,28 +196,39 @@ export function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Admin Panel */}
-        {appUser?.isAdmin && (
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-gradient-to-r from-primary/5 to-transparent"
-            onClick={() => navigate('/admin')}
-          >
-            <CardContent className="pt-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Admin panel</p>
-                    <p className="text-sm text-muted-foreground">Narxlar va reytinglarni boshqarish</p>
-                  </div>
+        {/* Admin Panel – endi faqat is_admin true bo'lsa faol */}
+        <Card
+          className={`transition-all ${
+            isAdmin 
+              ? "cursor-pointer hover:shadow-lg border-primary/20 bg-gradient-to-r from-primary/5 to-transparent" 
+              : "opacity-60 cursor-not-allowed bg-gray-100/50 dark:bg-gray-800/30"
+          }`}
+          onClick={() => {
+            if (isAdmin) {
+              navigate('/admin');
+            }
+            // agar xohlasangiz bu yerga toast qo'shishingiz mumkin
+          }}
+        >
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-primary" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-semibold">Admin panel</p>
+                  <p className="text-sm text-muted-foreground">Narxlar va reytinglarni boshqarish</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              {isAdmin ? (
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <Lock className="w-5 h-5 text-muted-foreground/70" />
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Menu Items */}
         <div className="space-y-3">

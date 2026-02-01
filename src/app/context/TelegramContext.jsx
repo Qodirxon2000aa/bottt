@@ -11,40 +11,52 @@ export const TelegramProvider = ({ children }) => {
   const fetchedRef = useRef(false);
 
   /* ========================= 👤 USER FETCH ========================= */
-  const fetchUserFromApi = async (telegramId) => {
-    try {
-      setLoading(true);
-      const url = `https://m4746.myxvest.ru/webapp/get_user.php?user_id=${telegramId}`;
-      console.log("📡 Fetching user from API:", url);
-      
-      const res = await fetch(url, {
-        headers: { Accept: "application/json" },
-        cache: "no-cache",
-      });
-      
-      if (!res.ok) throw new Error("User fetch error");
-      
-      const text = await res.text();
-      const data = JSON.parse(text);
-      
-      console.log("📡 API Response:", data);
-      
-      const userData = data.ok
-        ? { balance: data.data?.balance || "0", ...data.data }
-        : { balance: "0" };
-        
-      setApiUser(userData);
-      console.log("✅ User data loaded:", userData);
-      return userData;
-    } catch (err) {
-      console.error("❌ fetchUserFromApi:", err.message);
-      const fallback = { balance: "0" };
+// ... oldingi kodning yuqori qismi o'zgarmaydi ...
+
+const fetchUserFromApi = async (telegramId) => {
+  try {
+    setLoading(true);
+    const url = `https://m4746.myxvest.ru/webapp/get_user.php?user_id=${telegramId}`;
+    console.log("📡 Fetching user from API:", url);
+    
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      cache: "no-cache",
+    });
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const data = await res.json();
+    console.log("📡 API Response:", data);
+    
+    if (!data.ok) {
+      const fallback = { balance: "0", is_admin: false };
       setApiUser(fallback);
       return fallback;
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // Muhim: is_admin ni to'g'ri saqlaymiz
+    const userData = {
+      ...data.data,                     // balance, profile, hash, referal, action, status, date va h.k.
+      is_admin: !!data.is_admin,        // true/false ga aylantiramiz (boolean)
+    };
+    
+    setApiUser(userData);
+    console.log("✅ User data loaded:", userData);
+    return userData;
+  } catch (err) {
+    console.error("❌ fetchUserFromApi error:", err);
+    const fallback = { balance: "0", is_admin: false };
+    setApiUser(fallback);
+    return fallback;
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ... qolgan funksiyalar (fetchOrders, createOrder, refreshUser va h.k.) o'zgarmaydi ...
+
+// useEffect ichida hech narsa o'zgarmaydi
 
   /* ========================= 📦 ORDERS ========================= */
   const fetchOrders = async (telegramId) => {

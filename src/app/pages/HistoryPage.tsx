@@ -94,7 +94,7 @@ export function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopBar title="Tranzaksiyalar trihi" subtitle="Siz bu yerdan barcha o'tkazmalarni ko'ra olasiz!" />
+      <TopBar title="Tranzaksiyalar tarixi" subtitle="Siz bu yerdan barcha o'tkazmalarni ko'ra olasiz!" />
 
       <div className="p-4 space-y-5">
         {/* Filters */}
