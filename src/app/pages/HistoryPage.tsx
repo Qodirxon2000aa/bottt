@@ -12,17 +12,17 @@ import * as Dialog from '@radix-ui/react-dialog';
 // Backend → Frontend status mapping
 const statusMap: Record<string, { label: string; variant: string; icon: JSX.Element | null }> = {
   Successful: {
-    label: 'completed',
+    label: 'Tasdiqlangan',
     variant: 'success',
     icon: <CheckCircle2 className="w-4 h-4 text-success" />,
   },
   Pending: {
-    label: 'pending',
+    label: 'Jarayonda',
     variant: 'warning',
     icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
   },
   Failed: {
-    label: 'failed',
+    label: 'Bekor qilingan',
     variant: 'destructive',
     icon: <XCircle className="w-4 h-4 text-destructive" />,
   },
@@ -94,15 +94,15 @@ export function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopBar title="Transaction History" subtitle="View all your star purchases" />
+      <TopBar title="Tranzaksiyalar trihi" subtitle="Siz bu yerdan barcha o'tkazmalarni ko'ra olasiz!" />
 
       <div className="p-4 space-y-5">
         {/* Filters */}
         <ChipGroup>
-          <Chip selected={filter === 'all'}    onClick={() => setFilter('all')}>All</Chip>
-          <Chip selected={filter === 'completed'} onClick={() => setFilter('completed')}>Completed</Chip>
-          <Chip selected={filter === 'pending'}   onClick={() => setFilter('pending')}>Pending</Chip>
-          <Chip selected={filter === 'failed'}    onClick={() => setFilter('failed')}>Failed</Chip>
+          <Chip selected={filter === 'all'}    onClick={() => setFilter('all')}>Hamamsi</Chip>
+          <Chip selected={filter === 'completed'} onClick={() => setFilter('completed')}>Tasdiqlangan</Chip>
+          <Chip selected={filter === 'pending'}   onClick={() => setFilter('pending')}>Jarayonda</Chip>
+          <Chip selected={filter === 'failed'}    onClick={() => setFilter('failed')}>Bekor qilingan</Chip>
         </ChipGroup>
 
         {/* Transaction List */}
@@ -215,7 +215,7 @@ export function HistoryPage() {
                     {/* Details */}
                     <div className="space-y-3 bg-accent/30 rounded-xl p-4">
                       <div className="flex justify-between py-2 border-b border-border/60">
-                        <span className="text-muted-foreground">Order ID</span>
+                        <span className="text-muted-foreground">Buyurtma id</span>
                         <span className="font-mono">{selectedOrder.order_id}</span>
                       </div>
                       <div className="flex justify-between py-2 border-b border-border/60">
@@ -226,11 +226,11 @@ export function HistoryPage() {
                         </div>
                       </div>
                       <div className="flex justify-between py-2 border-b border-border/60">
-                        <span className="text-muted-foreground">Total</span>
+                        <span className="text-muted-foreground">Summa</span>
                         <span className="font-bold">{formatUZS(selectedOrder.summa)} UZS</span>
                       </div>
                       <div className="flex justify-between py-2">
-                        <span className="text-muted-foreground">Date & Time</span>
+                        <span className="text-muted-foreground">Sana</span>
                         <span>{format(dateObj, 'dd MMM yyyy • HH:mm')}</span>
                       </div>
                     </div>
@@ -244,7 +244,7 @@ export function HistoryPage() {
 
                     <Dialog.Close asChild>
                       <button className="w-full h-11 bg-secondary text-secondary-foreground rounded-xl font-medium hover:bg-secondary/90 transition-colors">
-                        Close
+                        Yopish
                       </button>
                     </Dialog.Close>
                   </div>
