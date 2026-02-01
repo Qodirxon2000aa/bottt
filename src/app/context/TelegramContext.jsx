@@ -11,11 +11,11 @@ export const TelegramProvider = ({ children }) => {
   const fetchedRef = useRef(false);
 
   /* ========================= 👤 USER FETCH ========================= */
-  const fetchUserFromApi = async (userId) => {
+  const fetchUserFromApi = async (telegramId) => {
     try {
       setLoading(true);
-      const url = `https://tezpremium.uz/SherifZakaz/webapp/get_user.php?user_id=${userId}`;
-      console.log("📡 Fetching user:", userId);
+      const url = `https://tezpremium.uz/SherifZakaz/webapp/get_user.php?user_id=${telegramId}`;
+      console.log("📡 Fetching user from API:", url);
       
       const res = await fetch(url, {
         headers: { Accept: "application/json" },
@@ -26,6 +26,9 @@ export const TelegramProvider = ({ children }) => {
       
       const text = await res.text();
       const data = JSON.parse(text);
+      
+      console.log("📡 API Response:", data);
+      
       const userData = data.ok
         ? { balance: data.data?.balance || "0", ...data.data }
         : { balance: "0" };
@@ -44,10 +47,10 @@ export const TelegramProvider = ({ children }) => {
   };
 
   /* ========================= 📦 ORDERS ========================= */
-  const fetchOrders = async (userId) => {
+  const fetchOrders = async (telegramId) => {
     try {
-      const url = `https://tezpremium.uz/SherifZakaz/webapp/history.php?user_id=${userId}`;
-      console.log("📦 Fetching orders for:", userId);
+      const url = `https://tezpremium.uz/SherifZakaz/webapp/history.php?user_id=${telegramId}`;
+      console.log("📦 Fetching orders from:", url);
       
       const res = await fetch(url);
       const data = await res.json();
@@ -61,10 +64,10 @@ export const TelegramProvider = ({ children }) => {
   };
 
   /* ========================= 💳 PAYMENTS ========================= */
-  const fetchPayments = async (userId) => {
+  const fetchPayments = async (telegramId) => {
     try {
-      const url = `https://tezpremium.uz/SherifZakaz/webapp/payments.php?user_id=${userId}`;
-      console.log("💳 Fetching payments for:", userId);
+      const url = `https://tezpremium.uz/SherifZakaz/webapp/payments.php?user_id=${telegramId}`;
+      console.log("💳 Fetching payments from:", url);
       
       const res = await fetch(url);
       const data = await res.json();
@@ -192,12 +195,18 @@ export const TelegramProvider = ({ children }) => {
 
     const tgUser = telegram?.initDataUnsafe?.user;
     
-    // HAQIQIY TELEGRAM FOYDALANUVCHISI
+    // ============================================
+    // TELEGRAM WEB APP ORQALI KIRILSA
+    // ============================================
     if (tgUser?.id) {
-      console.log("✅ Real Telegram user detected:", tgUser);
+      console.log("✅ Real Telegram user detected:");
+      console.log("   - Telegram ID:", tgUser.id);
+      console.log("   - First Name:", tgUser.first_name);
+      console.log("   - Username:", tgUser.username);
       
+      // 1️⃣ Telegram user ma'lumotlarini saqlash
       const userData = {
-        id: String(tgUser.id), // String formatda saqlash
+        id: String(tgUser.id), // Telegram ID
         first_name: tgUser.first_name || "",
         last_name: tgUser.last_name || "",
         username: tgUser.username ? `@${tgUser.username}` : "",
@@ -207,16 +216,21 @@ export const TelegramProvider = ({ children }) => {
       
       setUser(userData);
       
-      // Haqiqiy user ID bilan ma'lumotlarni yuklash
+      // 2️⃣ Telegram ID orqali API dan ma'lumotlarni olish
       (async () => {
-        await fetchUserFromApi(tgUser.id);
-        await fetchOrders(tgUser.id);
-        await fetchPayments(tgUser.id);
+        console.log(`🔍 Fetching data for Telegram ID: ${tgUser.id}`);
+        await fetchUserFromApi(tgUser.id);  // ✅ Telegram ID
+        await fetchOrders(tgUser.id);        // ✅ Telegram ID
+        await fetchPayments(tgUser.id);      // ✅ Telegram ID
+        console.log("✅ All data loaded successfully!");
       })();
     } 
+    // ============================================
     // BRAUZERDA OCHILSA - FAKE DATA
+    // ============================================
     else {
-      console.log("⚠️ Not in Telegram, using fake dev data");
+      console.log("⚠️ Not in Telegram - Using dev mode");
+      console.log("   - Using fake ID: 7521806735");
       
       const devUser = {
         id: "7521806735",
