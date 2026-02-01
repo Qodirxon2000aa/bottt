@@ -179,80 +179,99 @@ export const TelegramProvider = ({ children }) => {
     }
   };
 
-  /* ========================= 🚀 INIT ========================= */
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
 
-    const telegram = window.Telegram?.WebApp;
-    const tgUser = telegram?.initDataUnsafe?.user;
-    
-    // ============================================
-    // ✅ TELEGRAM WEB APP ORQALI KIRILSA
-    // ============================================
-    if (tgUser?.id) {
-      // Telegram Web App ni tayyor qilish
-      if (telegram) {
-        telegram.ready();
-        telegram.expand();
+
+  // ========================= 📲 TELEGRAM USER GETTER =========================
+const getTelegramUser = () => {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return null;
+
+  // 1️⃣ Asosiy va eng ishonchli yo‘l
+  if (tg.initDataUnsafe?.user?.id) {
+    return tg.initDataUnsafe.user;
+  }
+
+  // 2️⃣ Fallback — initData stringdan parse qilish
+  if (tg.initData) {
+    try {
+      const params = new URLSearchParams(tg.initData);
+      const userRaw = params.get("user");
+      if (userRaw) {
+        return JSON.parse(userRaw);
       }
-      
-      console.log("✅ REAL TELEGRAM USER:");
-      console.log("   📱 ID:", tgUser.id);
-      console.log("   👤 Name:", tgUser.first_name);
-      console.log("   🔗 Username:", tgUser.username || "yo'q");
-      
-      // Real Telegram user ma'lumotlarini saqlash
-      const realUserData = {
-        id: String(tgUser.id),
-        first_name: tgUser.first_name || "",
-        last_name: tgUser.last_name || "",
-        username: tgUser.username ? `@${tgUser.username}` : "",
-        photo_url: tgUser.photo_url || null,
-        isTelegram: true,
-      };
-      
-      setUser(realUserData);
-      
-      // Real user ID bilan API dan ma'lumotlarni yuklash
-      (async () => {
-        console.log(`🔍 Loading data for Telegram user: ${tgUser.id}`);
-        await fetchUserFromApi(tgUser.id);
-        await fetchOrders(tgUser.id);
-        await fetchPayments(tgUser.id);
-        console.log("✅ Real user data loaded!");
-      })();
-    } 
-    // ============================================
-    // ⚠️ BRAUZERDA OCHILSA - DEV MODE (FAKE DATA)
-    // ============================================
-    else {
-      console.log("⚠️ DEV MODE ACTIVE - NOT IN TELEGRAM");
-      console.log("   🧪 Using fake test user");
-      console.log("   📱 Fake ID: 7521806735");
-      
-      // Fake dev user ma'lumotlari
-      const fakeDevUser = {
-        id: "7521806735",
-        first_name: "Qodirxon",
-        last_name: "Dev",
-        username: "@qiyossiz",
-        photo_url: null,
-        isTelegram: false,
-      };
-      
-      setUser(fakeDevUser);
-      
-      // Fake user ID bilan ma'lumotlarni yuklash
-      (async () => {
-        console.log("🧪 Loading fake dev data...");
-        await fetchUserFromApi("7521806735");
-        await fetchOrders("7521806735");
-        await fetchPayments("7521806735");
-        console.log("✅ Fake dev data loaded!");
-      })();
+    } catch (e) {
+      console.error("❌ Telegram initData parse error:", e);
     }
-  }, []);
+  }
+
+  return null;
+};
+
+  /* ========================= 🚀 INIT ========================= */
+useEffect(() => {
+  if (fetchedRef.current) return;
+  fetchedRef.current = true;
+
+  const telegram = window.Telegram?.WebApp;
+  const tgUser = getTelegramUser();
+
+  if (telegram) {
+    telegram.ready();
+    telegram.expand();
+  }
+
+  // ============================================
+  // ✅ REAL TELEGRAM USER
+  // ============================================
+  if (tgUser?.id) {
+    console.log("✅ TELEGRAM USER DETECTED");
+    console.log("📱 ID:", tgUser.id);
+
+    const realUserData = {
+      id: String(tgUser.id),
+      first_name: tgUser.first_name || "",
+      last_name: tgUser.last_name || "",
+      username: tgUser.username ? `@${tgUser.username}` : "",
+      photo_url: tgUser.photo_url || null,
+      isTelegram: true,
+    };
+
+    setUser(realUserData);
+
+    (async () => {
+      console.log("📡 Fetching API user by telegram ID:", tgUser.id);
+      await fetchUserFromApi(tgUser.id);
+      await fetchOrders(tgUser.id);
+      await fetchPayments(tgUser.id);
+      console.log("✅ API DATA LOADED");
+    })();
+  }
+
+  // ============================================
+  // ⚠️ DEV MODE
+  // ============================================
+  else {
+    console.warn("⚠️ NOT IN TELEGRAM — DEV MODE");
+
+    const fakeId = "7521806735";
+
+    setUser({
+      id: fakeId,
+      first_name: "Qodirxon",
+      last_name: "Dev",
+      username: "@qiyossiz",
+      photo_url: null,
+      isTelegram: false,
+    });
+
+    (async () => {
+      await fetchUserFromApi(fakeId);
+      await fetchOrders(fakeId);
+      await fetchPayments(fakeId);
+    })();
+  }
+}, []);
+
 
   return (
     <TelegramContext.Provider
