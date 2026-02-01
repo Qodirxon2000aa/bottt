@@ -1,245 +1,264 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useApp } from '@/app/context/AppContext';
 import { useTelegram } from '@/app/context/TelegramContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/Card';
-import { Button } from '@/app/components/ui/Button';
+import { useApp } from '@/app/context/AppContext';
+import { TopBar } from '@/app/components/ui/TopBar';
+import { Card, CardContent } from '@/app/components/ui/Card';
 import { Badge } from '@/app/components/ui/Badge';
-import { Sparkles, TrendingUp, Trophy, Clock, Wallet, ArrowRight, Gift, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
-import { useState } from 'react';
+import { 
+  Wallet, 
+  History, 
+  Gift, 
+  Star,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Loader2
+} from 'lucide-react';
+import { format, isValid, parseISO } from 'date-fns';
+import { uz } from 'date-fns/locale';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { currentRate, lastRateUpdate, contest } = useApp();
-  const { user: tgUser, apiUser, orders, loading, refreshUser } = useTelegram();
-  const [refreshing, setRefreshing] = useState(false);
+  const { user, apiUser, orders, loading } = useTelegram();
+  const { categories } = useApp();
 
-  const formatUZS = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount);
+  // Safe date formatter
+  const formatDate = (dateString: string | number | Date | null | undefined) => {
+    if (!dateString) return 'Noma\'lum sana';
+    
+    try {
+      // String bo'lsa ISO formatga o'tkazish
+      const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
+      
+      // Sanani tekshirish
+      if (!isValid(date)) {
+        console.warn('Invalid date:', dateString);
+        return 'Noma\'lum sana';
+      }
+      
+      // Format qilish
+      return format(date, 'dd MMM yyyy, HH:mm', { locale: uz });
+    } catch (error) {
+      console.error('Date formatting error:', error, dateString);
+      return 'Noma\'lum sana';
+    }
   };
 
-  // API dan kelgan ma'lumotlarni ishlatish
+  // Status badge
+  const getStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+      case 'success':
+      case 'delivered':
+        return (
+          <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/30">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Bajarildi
+          </Badge>
+        );
+      case 'pending':
+      case 'processing':
+        return (
+          <Badge variant="default" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">
+            <Clock className="w-3 h-3 mr-1" />
+            Jarayonda
+          </Badge>
+        );
+      case 'failed':
+      case 'cancelled':
+        return (
+          <Badge variant="default" className="bg-red-500/10 text-red-600 border-red-500/30">
+            <XCircle className="w-3 h-3 mr-1" />
+            Bekor qilindi
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary">
+            {status || 'Noma\'lum'}
+          </Badge>
+        );
+    }
+  };
+
   const userBalance = Number(apiUser?.balance || 0);
-  const recentTransactions = orders?.slice(0, 3) || [];
-
-  // Umumiy stars hisoblash
-  const totalStarsSpent = orders?.reduce((sum, order) => {
-    return sum + (Number(order.amount) || 0);
-  }, 0) || 0;
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refreshUser();
-    setTimeout(() => setRefreshing(false), 500);
-  };
+  const totalOrders = orders?.length || 0;
+  const recentOrders = orders?.slice(0, 5) || [];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="mt-4 text-muted-foreground">Yuklanmoqda...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-4">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-primary/10 to-transparent px-4 pt-6 pb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl mb-1">Stars Market</h1>
-            <p className="text-sm text-muted-foreground">
-              Welcome, {tgUser?.first_name || 'User'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="w-10 h-10 rounded-full bg-accent flex items-center justify-center hover:bg-accent/80 transition-colors"
-            >
-              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white text-xl">
-              {(tgUser?.first_name?.[0] || 'U').toUpperCase()}
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background">
+      <TopBar 
+        title={`Salom, ${user?.first_name || 'Foydalanuvchi'}!`}
+        subtitle="Sizning Stars bozoringiz"
+      />
 
+      <div className="p-4 space-y-6 pb-20">
         {/* Balance Card */}
-        <Card className="shadow-lg">
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Wallet className="w-4 h-4" />
-                <span className="text-sm">Your Balance</span>
+        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-white/80 text-sm mb-1">Sizning balansingiz</p>
+                <h2 className="text-4xl font-bold">
+                  {userBalance.toLocaleString('uz-UZ')} <span className="text-2xl">UZS</span>
+                </h2>
               </div>
-              <Badge variant="success">Active</Badge>
-            </div>
-            <div className="flex items-baseline gap-2 mb-4">
-              <p className="text-3xl font-bold">{formatUZS(userBalance)}</p>
-              <span className="text-muted-foreground">UZS</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-telegram-gold" />
-                <span className="text-sm text-muted-foreground">Stars Purchased</span>
+              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                <Wallet className="w-8 h-8" />
               </div>
-              <span className="font-medium">{formatUZS(totalStarsSpent)}</span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="px-4 space-y-4">
-        {/* Current Rate */}
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <span className="font-medium">Current Rate</span>
-              </div>
-              <Badge variant="default" className="text-xs">
-                <Clock className="w-3 h-3 mr-1" />
-                Updated {format(lastRateUpdate, 'HH:mm')}
-              </Badge>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-primary">1 ⭐ = {formatUZS(currentRate)}</p>
-              <span className="text-muted-foreground">UZS</span>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => navigate('/balance')}
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all text-left"
+              >
+                <TrendingUp className="w-5 h-5 mb-2" />
+                <p className="text-sm font-medium">To'ldirish</p>
+              </button>
+              <button
+                onClick={() => navigate('/history')}
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all text-left"
+              >
+                <History className="w-5 h-5 mb-2" />
+                <p className="text-sm font-medium">Tarix</p>
+              </button>
             </div>
           </CardContent>
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant="primary"
-            onClick={() => navigate('/buy')}
-            className="h-auto flex-col gap-2 py-4"
-          >
-            <Sparkles className="w-5 h-5" />
-            <span className="text-xs">Buy Stars</span>
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/leaderboard')}
-            className="h-auto flex-col gap-2 py-4"
-          >
-            <Trophy className="w-5 h-5" />
-            <span className="text-xs">Leaderboard</span>
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/leaderboard?tab=contest')}
-            className="h-auto flex-col gap-2 py-4"
-          >
-            <Gift className="w-5 h-5" />
-            <span className="text-xs">Contest</span>
-          </Button>
-        </div>
-
-        {/* Weekly Contest Banner */}
-        {contest && contest.isActive && (
+        <div className="grid grid-cols-3 gap-3">
           <Card 
-            className="bg-gradient-to-r from-telegram-gold/10 to-primary/10 border-telegram-gold/30 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => navigate('/leaderboard?tab=contest')}
+            className="cursor-pointer hover:shadow-md transition-all active:scale-95"
+            onClick={() => navigate('/stars')}
           >
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-telegram-gold/20 flex items-center justify-center">
-                    <Trophy className="w-6 h-6 text-telegram-gold" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{contest.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Win up to 1,000,000 UZS!
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground" />
+            <CardContent className="pt-5 text-center">
+              <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-3">
+                <Star className="w-6 h-6 text-yellow-600" />
               </div>
-              {contest.isParticipating && contest.currentUserRank && (
-                <div className="mt-3 p-2 rounded-lg bg-background/50">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Your Rank</span>
-                    <span className="font-medium">#{contest.currentUserRank}</span>
-                  </div>
-                </div>
-              )}
+              <p className="text-sm font-medium">Stars</p>
             </CardContent>
           </Card>
-        )}
 
-        {/* Recent Activity */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg">Recent Activity</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/history')}
-            >
-              View All
-            </Button>
-          </div>
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-all active:scale-95"
+            onClick={() => navigate('/premium')}
+          >
+            <CardContent className="pt-5 text-center">
+              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="w-6 h-6 text-blue-600" />
+              </div>
+              <p className="text-sm font-medium">Premium</p>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-2">
-            {recentTransactions.length > 0 ? (
-              recentTransactions.map((order) => (
-                <Card key={order.id}>
-                  <div className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white flex-shrink-0">
-                      {(order.sent?.[0] || 'U').toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{order.sent || 'Unknown'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {order.date ? format(new Date(order.date), 'MMM d, HH:mm') : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-medium">{order.amount || 0} ⭐</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatUZS(Number(order.overall) || 0)} UZS
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        order.status === 'Completed'
-                          ? 'success'
-                          : order.status === 'Pending'
-                          ? 'warning'
-                          : 'destructive'
-                      }
-                      className="text-[10px]"
-                    >
-                      {order.status || 'pending'}
-                    </Badge>
-                  </div>
-                </Card>
-              ))
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-all active:scale-95"
+            onClick={() => navigate('/gifts')}
+          >
+            <CardContent className="pt-5 text-center">
+              <div className="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center mx-auto mb-3">
+                <Gift className="w-6 h-6 text-pink-600" />
+              </div>
+              <p className="text-sm font-medium">Gifts</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Orders */}
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">So'nggi buyurtmalar</h3>
+              {totalOrders > 5 && (
+                <button
+                  onClick={() => navigate('/history')}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Barchasini ko'rish
+                </button>
+              )}
+            </div>
+
+            {recentOrders.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Hali buyurtmalar yo'q</p>
+              </div>
             ) : (
-              <Card>
-                <CardContent className="pt-4 text-center py-8">
-                  <p className="text-muted-foreground">No transactions yet</p>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => navigate('/buy')}
-                    className="mt-3"
+              <div className="space-y-3">
+                {recentOrders.map((order: any, index: number) => (
+                  <div
+                    key={order.id || index}
+                    className="flex items-center justify-between p-3 bg-accent/50 rounded-lg hover:bg-accent/70 transition-colors"
                   >
-                    Send Your First Stars
-                  </Button>
-                </CardContent>
-              </Card>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium truncate">
+                          {order.type || 'Buyurtma'} - {order.amount || 0}
+                        </p>
+                        {getStatusBadge(order.status)}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatDate(order.created_at || order.date)}</span>
+                      </div>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="font-semibold">
+                        {Number(order.overall || order.price || 0).toLocaleString('uz-UZ')} UZS
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <History className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Jami buyurtmalar</p>
+                  <p className="text-2xl font-bold">{totalOrders}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Xizmatlar</p>
+                  <p className="text-2xl font-bold">{categories?.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
