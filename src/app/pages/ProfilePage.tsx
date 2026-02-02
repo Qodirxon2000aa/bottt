@@ -38,7 +38,7 @@ export function ProfilePage() {
 
   const getAvatarLetter = () => {
     if (tgUser?.first_name) return tgUser.first_name[0].toUpperCase();
-    if (tgUser?.username) return tgUser.username.replace('@', '')[0].toUpperCase();
+    if (tgUser?.username) return tgUser.username.replace('', '')[0].toUpperCase();
     return 'U';
   };
 
