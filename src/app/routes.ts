@@ -7,6 +7,7 @@ import { HistoryPage } from '@/app/pages/HistoryPage';
 import { ProfilePage } from '@/app/pages/ProfilePage';
 import { AdminPanelPage } from '@/app/pages/AdminPanelPage';
 import Payment from '@/app/pages/Payment';
+import ChekPage from '@/app/pages/ChekPage'; // 👈 YANGI
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +20,10 @@ export const router = createBrowserRouter([
       { path: 'history', Component: HistoryPage },
       { path: 'profile', Component: ProfilePage },
       { path: 'admin', Component: AdminPanelPage },
-      { path: 'payment', Component: Payment }
+      { path: 'payment', Component: Payment },
+
+      // ✅ ALOHIDA CHEK PAGE
+      { path: 'chek', Component: ChekPage }
     ]
   }
 ]);

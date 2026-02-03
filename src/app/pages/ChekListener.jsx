@@ -15,13 +15,12 @@ export default function ChekListener() {
 
     handledRef.current = true;
 
-    // 🧪 TEST
+    // ✅ endi payment emas, ALOHIDA PAGE
     if (startParam === "chek") {
-      navigate("/payment?fake=1");
+      navigate("/chek");
       return;
     }
 
-    // 🔮 future
     if (startParam.startsWith("order_")) {
       const id = startParam.replace("order_", "");
       navigate(`/order/${id}`);
