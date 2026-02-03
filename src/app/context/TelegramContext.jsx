@@ -267,9 +267,24 @@ useEffect(() => {
     typeof telegram.initData === "string" &&
     telegram.initData.length > 0;
 
+  // ============================================
+  // ✅ TELEGRAM FULL SIZE SETTINGS
+  // ============================================
   if (telegram) {
-    telegram.ready();
-    telegram.expand();
+    telegram.ready();          // WebApp tayyor
+    telegram.expand();         // 🔥 FULL SIZE
+    telegram.enableClosingConfirmation(); // ixtiyoriy
+
+    // 🔧 Viewport height fix (iOS / Android uchun muhim)
+    const setVH = () => {
+      document.documentElement.style.setProperty(
+        "--tg-viewport-height",
+        `${telegram.viewportHeight}px`
+      );
+    };
+
+    setVH();
+    telegram.onEvent("viewportChanged", setVH);
   }
 
   // ============================================
