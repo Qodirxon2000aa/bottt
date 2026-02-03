@@ -1,31 +1,55 @@
 export default function ChekPage() {
   return (
-    <div className="p-4">
-      <div className="rounded-xl border border-dashed border-orange-400 bg-orange-50 p-4">
-        <h2 className="text-lg font-semibold text-orange-600">
-          quuuuuuuuuuuuuuuuuuuv
-        </h2>
+    <div className="min-h-screen bg-[#0f0f10] flex items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-2xl bg-[#17181c] p-6 shadow-xl">
 
-        <p className="mt-2 text-sm text-gray-700">
-           <b>chek</b> 
-        </p>
-
-        <div className="mt-4 rounded-lg bg-white p-3 shadow-sm">
-          <div className="flex justify-between text-sm">
-            <span>Holat:</span>
-            <span className="font-medium text-green-600"></span>
+        {/* 👤 USER */}
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-2xl font-bold text-white">
+            S
           </div>
 
-          <div className="flex justify-between text-sm mt-1">
-            <span>Summa:</span>
-            <span className="font-medium">0 UZS</span>
-          </div>
+          <h2 className="mt-3 text-lg font-semibold text-white">
+            saviyali_bola
+          </h2>
 
-          <div className="flex justify-between text-sm mt-1">
-            <span>Buyurtma:</span>
-            <span className="font-medium">TEST-CHEK</span>
+          <p className="text-sm text-gray-400">@saviyali_bola</p>
+
+          <div className="mt-3 rounded-full bg-green-500/10 px-4 py-1 text-sm font-medium text-green-500">
+            ✔ Tasdiqlangan
           </div>
         </div>
+
+        {/* 📄 CHEK INFO */}
+        <div className="mt-6 rounded-xl bg-[#1f2126] p-4 space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Buyurtma ID</span>
+            <span className="text-white font-medium">38</span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Stars</span>
+            <span className="text-yellow-400 font-semibold">✨ 100</span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Summa</span>
+            <span className="text-white font-semibold">22 000 UZS</span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Sana</span>
+            <span className="text-white">03 Feb 2026 · 18:19</span>
+          </div>
+        </div>
+
+        {/* 🔘 BUTTON */}
+        <button
+          className="mt-6 w-full rounded-xl border border-blue-500 py-3 text-blue-400 font-medium hover:bg-blue-500/10 transition"
+          onClick={() => window.history.back()}
+        >
+          Yopish
+        </button>
       </div>
     </div>
   );
