@@ -16,38 +16,32 @@ import {
   XCircle,
   Loader2
 } from 'lucide-react';
-import { format, isValid, parseISO } from 'date-fns';
-import { uz } from 'date-fns/locale';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { user, apiUser, orders, loading } = useTelegram();
   const { categories } = useApp();
 
-  // Safe date formatter
- const formatDate = (dateString: string | null | undefined) => {
-  if (!dateString) return "Noma'lum sana";
-
-  try {
-    // API dan keladigan format: "YYYY-MM-DD HH:mm:ss"
-    const normalized = dateString.replace(" ", "T");
-    const date = new Date(normalized);
-
-    if (!isValid(date)) return "Noma'lum sana";
-
-    return format(date, "dd MMM yyyy, HH:mm", { locale: uz });
-  } catch (e) {
-    console.error("Date error:", dateString);
-    return "Noma'lum sana";
-  }
-};
-
+  // Safe date formatter - API dan "03.02.2026 | 18:19" formatda keladi
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "Noma'lum sana";
+    
+    try {
+      // API dan kelgan format: "03.02.2026 | 18:19"
+      // Bu format allaqachon o'zbek tilda, shuning uchun shunchaki qaytaramiz
+      return dateString;
+    } catch (e) {
+      console.error("Date error:", dateString);
+      return "Noma'lum sana";
+    }
+  };
 
   // Status badge
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'completed':
       case 'success':
+      case 'successful':
       case 'delivered':
         return (
           <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/30">
@@ -200,7 +194,7 @@ export function HomePage() {
               <div className="space-y-3">
                 {recentOrders.map((order: any, index: number) => (
                   <div
-                    key={order.id || index}
+                    key={order.order_id || index}
                     className="flex items-center justify-between p-3 bg-accent/50 rounded-lg hover:bg-accent/70 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
@@ -212,12 +206,12 @@ export function HomePage() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
-                        <span>{formatDate(order.created_at || order.date)}</span>
+                        <span>{formatDate(order.date)}</span>
                       </div>
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-semibold">
-                        {Number(order.overall || order.price || 0).toLocaleString('uz-UZ')} UZS
+                        {Number(order.summa || 0).toLocaleString('uz-UZ')} UZS
                       </p>
                     </div>
                   </div>
