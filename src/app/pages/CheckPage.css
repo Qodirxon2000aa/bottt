@@ -1,0 +1,121 @@
+.check-wrapper {
+  min-height: 100vh;
+  background: #0f0f10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
+
+.check-card {
+  width: 100%;
+  max-width: 420px;
+  background: #17181c;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* USER */
+.check-user {
+  text-align: center;
+}
+
+.check-avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.check-name {
+  margin-top: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.check-username {
+  font-size: 14px;
+  color: #8b8e99;
+  margin-top: 2px;
+}
+
+/* VERIFIED PILL */
+.check-verified {
+  margin: 12px auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.check-dot {
+  font-size: 14px;
+}
+
+/* INFO CARD */
+.check-info {
+  margin-top: 24px;
+  background: #1f2126;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+/* ROWS */
+.check-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.check-row:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.check-row span {
+  color: #9ca3af;
+}
+
+.check-row strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.check-row .stars {
+  color: #facc15;
+}
+
+/* CLOSE BUTTON */
+.check-close {
+  margin-top: 24px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1.5px solid #3b82f6;
+  color: #60a5fa;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.check-close:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
