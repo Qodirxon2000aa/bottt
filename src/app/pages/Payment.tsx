@@ -22,6 +22,16 @@ export default function Payment() {
 
   const isImageLoaded = (m: PaymentMethod) => loadedImages.has(m);
 
+  // Input o'zgarishi uchun handler
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAmount(value);
+    // Agar raqam bo'lsa, xatolikni o'chirib yuborish
+    if (value === "" || !isNaN(parseFloat(value))) {
+      setError("");
+    }
+  };
+
   const handleSubmit = () => {
     const amountNum = parseFloat(amount);
     if (!amount || isNaN(amountNum)) {
@@ -75,6 +85,7 @@ export default function Payment() {
               key={m}
               onClick={() => setMethod(m)}
               className={`payment-method ${method === m ? "selected" : ""}`}
+              style={{ cursor: "pointer" }}
             >
               {/* Skeleton Loader */}
               {!isImageLoaded(m) && <div className="payment-skeleton"></div>}
@@ -107,19 +118,32 @@ export default function Payment() {
 
       {/* Miqdor */}
       <div className="payment-input-block">
-        <label className="payment-input-label">To'lov miqdori (so'm)</label>
+        <label htmlFor="amount-input" className="payment-input-label">
+          To'lov miqdori (so'm)
+        </label>
         <input
+          id="amount-input"
           type="number"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={handleAmountChange}
           placeholder="Masalan: 50000"
           className="payment-input"
+          style={{
+            cursor: "text",
+            pointerEvents: "auto",
+            opacity: 1,
+          }}
+          disabled={false}
         />
         {error && <p className="payment-error">⚠️ {error}</p>}
       </div>
 
       {/* Tugma */}
-      <button onClick={handleSubmit} className="payment-button">
+      <button 
+        onClick={handleSubmit} 
+        className="payment-button"
+        style={{ cursor: "pointer" }}
+      >
         ✓ Yuborish
       </button>
     </div>
