@@ -99,7 +99,7 @@ const fetchUserFromApi = async (telegramId) => {
       
       const url =
         `https://m4746.myxvest.ru/webapp/order.php` +
-        `?user_id=${user.id}&amount=${amount}&sent=@${sent.replace("@", "")}` +
+        `?user_id=${user.id}&amount=${amount}&sent=@${sent.replace("@ ", "")}` +
         `&type=${type}&overall=${overall}`;
         
       console.log("⭐ Creating order:", url);

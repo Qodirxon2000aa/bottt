@@ -26,11 +26,23 @@ export function AdminPanelPage() {
   const navigate = useNavigate();
   const { user, currentRate, lastRateUpdate, updateRate, resetWeeklyLeaderboard, resetAllTimeLeaderboard, resetContest } = useApp();
   
-  const [newRate, setNewRate] = useState(currentRate.toString());
+  // currentRate undefined bo'lsa bo'sh string bilan boshlaymiz
+  const [newRate, setNewRate] = useState(currentRate?.toString() ?? "");
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetType, setResetType] = useState<'weekly' | 'all-time' | 'contest'>('weekly');
 
-  // Redirect if not admin
+  // Agar user hali yuklanmagan bo'lsa yoki admin emas bo'lsa
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <p className="text-lg">Ma'lumotlar yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin emas bo'lsa qaytib ketamiz
   if (!user.isAdmin) {
     navigate('/');
     return null;
@@ -39,13 +51,13 @@ export function AdminPanelPage() {
   const handleUpdateRate = () => {
     const rate = parseInt(newRate);
     if (isNaN(rate) || rate <= 0) {
-      toast.error('Invalid rate', { description: 'Please enter a valid positive number' });
+      toast.error('Noto‘g‘ri qiymat', { description: 'Iltimos, musbat son kiriting' });
       return;
     }
     
     updateRate(rate);
-    toast.success('Rate updated successfully', {
-      description: `New rate: 1 ⭐ = ${new Intl.NumberFormat('uz-UZ').format(rate)} UZS`
+    toast.success('Kurs muvaffaqiyatli yangilandi', {
+      description: `Yangi kurs: 1 ⭐ = ${new Intl.NumberFormat('uz-UZ').format(rate)} UZS`
     });
   };
 
@@ -57,13 +69,13 @@ export function AdminPanelPage() {
   const confirmReset = () => {
     if (resetType === 'weekly') {
       resetWeeklyLeaderboard();
-      toast.success('Weekly leaderboard reset successfully');
+      toast.success('Haftalik reyting jadvali tozalandi');
     } else if (resetType === 'all-time') {
       resetAllTimeLeaderboard();
-      toast.success('All-time leaderboard reset successfully');
+      toast.success('Umumiy reyting jadvali tozalandi');
     } else if (resetType === 'contest') {
       resetContest();
-      toast.success('Contest reset successfully');
+      toast.success('Tanlov ma‘lumotlari tozalandi');
     }
     setShowResetDialog(false);
   };
@@ -72,7 +84,7 @@ export function AdminPanelPage() {
     <div className="min-h-screen">
       <TopBar
         title="Admin Panel"
-        subtitle="Manage rates and leaderboards"
+        subtitle="Kurs va reytinglarni boshqarish"
         backButton={
           <button
             onClick={() => navigate(-1)}
@@ -91,8 +103,8 @@ export function AdminPanelPage() {
 
       <div className="p-4 space-y-6">
         {/* Warning */}
-        <MessageBox type="warning" title="Admin Access">
-          You have full control over rates and leaderboards. Use these powers responsibly.
+        <MessageBox type="warning" title="Admin huquqi">
+          Siz kurslar va reyting jadvallarini to‘liq boshqarish huquqiga egasiz. Ushbu imkoniyatlardan mas'uliyat bilan foydalaning.
         </MessageBox>
 
         {/* Rate Management */}
@@ -100,38 +112,40 @@ export function AdminPanelPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <CardTitle>Rate Management</CardTitle>
+              <CardTitle>Kurs boshqaruvi</CardTitle>
             </div>
             <CardDescription>
-              Set the exchange rate for Stars to UZS
+              Yulduzlar → UZS kursini o‘rnatish
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-3 bg-accent/30 rounded-lg">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-muted-foreground">Current Rate</span>
+                <span className="text-sm text-muted-foreground">Joriy kurs</span>
                 <Badge variant="default" className="text-xs">
-                  Updated {format(lastRateUpdate, 'HH:mm')}
+                  Yangilangan {lastRateUpdate ? format(lastRateUpdate, 'HH:mm') : '—'}
                 </Badge>
               </div>
               <p className="text-xl font-bold text-primary">
-                1 ⭐ = {new Intl.NumberFormat('uz-UZ').format(currentRate)} UZS
+                1 ⭐ = {currentRate != null 
+                  ? new Intl.NumberFormat('uz-UZ').format(currentRate) 
+                  : "—"} UZS
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Rate (UZS per 1 Star)</label>
+              <label className="text-sm font-medium">Yangi kurs (1 Yulduz uchun UZS)</label>
               <div className="flex gap-2">
                 <Input
                   type="number"
                   value={newRate}
                   onChange={(e) => setNewRate(e.target.value)}
-                  placeholder="Enter rate"
+                  placeholder="Kursni kiriting"
                   className="flex-1"
                 />
                 <Button onClick={handleUpdateRate} className="gap-2">
                   <Save className="w-4 h-4" />
-                  Update
+                  Saqlash
                 </Button>
               </div>
             </div>
@@ -143,10 +157,10 @@ export function AdminPanelPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-telegram-gold" />
-              <CardTitle>Leaderboard Management</CardTitle>
+              <CardTitle>Reyting jadvallari</CardTitle>
             </div>
             <CardDescription>
-              Reset leaderboards and clear all data
+              Reyting jadvallarini tozalash va ma'lumotlarni o‘chirish
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -157,8 +171,8 @@ export function AdminPanelPage() {
                   <Trophy className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">All-Time Leaderboard</p>
-                  <p className="text-sm text-muted-foreground">Permanent rankings</p>
+                  <p className="font-medium">Umumiy reyting</p>
+                  <p className="text-sm text-muted-foreground">Doimiy reyting</p>
                 </div>
               </div>
               <Button
@@ -167,7 +181,7 @@ export function AdminPanelPage() {
                 onClick={() => handleResetClick('all-time')}
               >
                 <RefreshCw className="w-4 h-4 mr-1" />
-                Reset
+                Tozalash
               </Button>
             </div>
 
@@ -178,8 +192,8 @@ export function AdminPanelPage() {
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Weekly Leaderboard</p>
-                  <p className="text-sm text-muted-foreground">Resets every Monday</p>
+                  <p className="font-medium">Haftalik reyting</p>
+                  <p className="text-sm text-muted-foreground">Har dushanba yangilanadi</p>
                 </div>
               </div>
               <Button
@@ -188,7 +202,7 @@ export function AdminPanelPage() {
                 onClick={() => handleResetClick('weekly')}
               >
                 <RefreshCw className="w-4 h-4 mr-1" />
-                Reset
+                Tozalash
               </Button>
             </div>
           </CardContent>
@@ -199,10 +213,10 @@ export function AdminPanelPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-telegram-gold" />
-              <CardTitle>Contest Management</CardTitle>
+              <CardTitle>Tanlov boshqaruvi</CardTitle>
             </div>
             <CardDescription>
-              Manage weekly contests and prizes
+              Haftalik tanlov va sovrinlarni boshqarish
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -212,8 +226,8 @@ export function AdminPanelPage() {
                   <Sparkles className="w-5 h-5 text-telegram-gold" />
                 </div>
                 <div>
-                  <p className="font-medium">Active Contest</p>
-                  <p className="text-sm text-muted-foreground">Weekly Stars Sprint</p>
+                  <p className="font-medium">Faol tanlov</p>
+                  <p className="text-sm text-muted-foreground">Haftalik Yulduzlar poygasi</p>
                 </div>
               </div>
               <Button
@@ -222,13 +236,13 @@ export function AdminPanelPage() {
                 onClick={() => handleResetClick('contest')}
               >
                 <RefreshCw className="w-4 h-4 mr-1" />
-                Reset
+                Tozalash
               </Button>
             </div>
 
             <Button variant="secondary" fullWidth className="gap-2">
               <Sparkles className="w-4 h-4" />
-              Create New Contest
+              Yangi tanlov yaratish
             </Button>
           </CardContent>
         </Card>
@@ -236,25 +250,25 @@ export function AdminPanelPage() {
         {/* Stats Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Stats</CardTitle>
-            <CardDescription>Overview of platform activity</CardDescription>
+            <CardTitle>Tezkor statistika</CardTitle>
+            <CardDescription>Platforma faoliyati haqida qisqacha</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-accent/20 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Total Users</p>
+                <p className="text-xs text-muted-foreground mb-1">Jami foydalanuvchilar</p>
                 <p className="text-2xl font-bold">1,234</p>
               </div>
               <div className="p-3 bg-accent/20 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Total Transactions</p>
+                <p className="text-xs text-muted-foreground mb-1">Jami tranzaksiyalar</p>
                 <p className="text-2xl font-bold">5,678</p>
               </div>
               <div className="p-3 bg-accent/20 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Stars Sold</p>
+                <p className="text-xs text-muted-foreground mb-1">Sotilgan yulduzlar</p>
                 <p className="text-2xl font-bold">150K</p>
               </div>
               <div className="p-3 bg-accent/20 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Revenue</p>
+                <p className="text-xs text-muted-foreground mb-1">Daromad</p>
                 <p className="text-2xl font-bold">225M</p>
               </div>
             </div>
@@ -274,35 +288,35 @@ export function AdminPanelPage() {
                 </div>
                 <div>
                   <AlertDialog.Title className="font-medium">
-                    Confirm Reset
+                    Tozalashni tasdiqlang
                   </AlertDialog.Title>
                   <AlertDialog.Description className="text-sm text-muted-foreground">
-                    This action cannot be undone
+                    Bu amal orqaga qaytarib bo‘lmaydi
                   </AlertDialog.Description>
                 </div>
               </div>
 
               <MessageBox type="error">
                 <p className="text-sm">
-                  Are you sure you want to reset the{' '}
+                  Haqiqatan ham 
                   <strong>
-                    {resetType === 'all-time' ? 'all-time' : resetType === 'weekly' ? 'weekly' : 'contest'}
+                    {resetType === 'all-time' ? ' umumiy' : resetType === 'weekly' ? ' haftalik' : ' tanlov'}
                   </strong>{' '}
-                  {resetType === 'contest' ? 'data' : 'leaderboard'}?
+                  {resetType === 'contest' ? 'ma‘lumotlarini' : 'reyting jadvalini'} tozalamoqchimisiz?
                 </p>
-                <p className="text-sm mt-2">All data will be permanently deleted.</p>
+                <p className="text-sm mt-2">Barcha ma'lumotlar butunlay o‘chiriladi.</p>
               </MessageBox>
 
               <div className="flex gap-2">
                 <AlertDialog.Cancel asChild>
                   <Button variant="secondary" fullWidth>
-                    Cancel
+                    Bekor qilish
                   </Button>
                 </AlertDialog.Cancel>
                 <AlertDialog.Action asChild>
                   <Button variant="destructive" fullWidth onClick={confirmReset}>
                     <AlertTriangle className="w-4 h-4 mr-1" />
-                    Confirm Reset
+                    Tozalashni tasdiqlash
                   </Button>
                 </AlertDialog.Action>
               </div>

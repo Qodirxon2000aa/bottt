@@ -25,26 +25,23 @@ export function HomePage() {
   const { categories } = useApp();
 
   // Safe date formatter
-  const formatDate = (dateString: string | number | Date | null | undefined) => {
-    if (!dateString) return 'Noma\'lum sana';
-    
-    try {
-      // String bo'lsa ISO formatga o'tkazish
-      const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
-      
-      // Sanani tekshirish
-      if (!isValid(date)) {
-        console.warn('Invalid date:', dateString);
-        return 'Noma\'lum sana';
-      }
-      
-      // Format qilish
-      return format(date, 'dd MMM yyyy, HH:mm', { locale: uz });
-    } catch (error) {
-      console.error('Date formatting error:', error, dateString);
-      return 'Noma\'lum sana';
-    }
-  };
+ const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return "Noma'lum sana";
+
+  try {
+    // API dan keladigan format: "YYYY-MM-DD HH:mm:ss"
+    const normalized = dateString.replace(" ", "T");
+    const date = new Date(normalized);
+
+    if (!isValid(date)) return "Noma'lum sana";
+
+    return format(date, "dd MMM yyyy, HH:mm", { locale: uz });
+  } catch (e) {
+    console.error("Date error:", dateString);
+    return "Noma'lum sana";
+  }
+};
+
 
   // Status badge
   const getStatusBadge = (status: string) => {
