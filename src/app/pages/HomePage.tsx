@@ -120,7 +120,7 @@ export function HomePage() {
             
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => navigate('/balance')}
+                onClick={() => navigate('/payment')}
                 className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all text-left"
               >
                 <TrendingUp className="w-5 h-5 mb-2" />

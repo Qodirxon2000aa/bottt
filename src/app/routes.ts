@@ -6,6 +6,7 @@ import { LeaderboardPage } from '@/app/pages/LeaderboardPage';
 import { HistoryPage } from '@/app/pages/HistoryPage';
 import { ProfilePage } from '@/app/pages/ProfilePage';
 import { AdminPanelPage } from '@/app/pages/AdminPanelPage';
+import Payment from '@/app/pages/Payment'; // 👈 YANGI PAGE
 
 export const router = createBrowserRouter([
   {
@@ -17,7 +18,10 @@ export const router = createBrowserRouter([
       { path: 'leaderboard', Component: LeaderboardPage },
       { path: 'history', Component: HistoryPage },
       { path: 'profile', Component: ProfilePage },
-      { path: 'admin', Component: AdminPanelPage }
+      { path: 'admin', Component: AdminPanelPage },
+
+      // 🔥 Payment page
+      { path: 'payment', Component: Payment }
     ]
   }
 ]);
