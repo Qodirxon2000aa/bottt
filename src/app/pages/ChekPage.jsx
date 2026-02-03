@@ -47,7 +47,13 @@ export default function ChekPage() {
             <span>Sana</span>
             <strong>03 Feb 2026 · 18:19</strong>
           </div>
+          <div className="check-row">
+            <span>Yuboruvchi</span>
+            <strong>@salobadliy</strong>
+          </div>
+        
         </div>
+        
 
         <button onClick={handleClose} className="check-close">
           Yopish
