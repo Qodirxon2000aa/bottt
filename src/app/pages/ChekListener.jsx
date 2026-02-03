@@ -10,21 +10,41 @@ export default function ChekListener() {
 
     const tg = window.Telegram?.WebApp;
     const startParam = tg?.initDataUnsafe?.start_param;
+    const rawInit = tg?.initData; 
 
-    if (!startParam) return;
+    console.log("START_PARAM:", startParam);
+    console.log("RAW initData:", rawInit);
 
+    if (!startParam && !rawInit) return;
     handledRef.current = true;
 
-    // ✅ endi payment emas, ALOHIDA PAGE
+    // ⁉️ format1
     if (startParam === "chek") {
       navigate("/chek");
       return;
     }
 
-    if (startParam.startsWith("order_")) {
+    // ⁉️ order_
+    if (startParam?.startsWith("order_")) {
       const id = startParam.replace("order_", "");
       navigate(`/order/${id}`);
+      return;
     }
+
+    // 🎯 YANGI: chek_id=39
+    if (startParam?.startsWith("chek_id=")) {
+      const id = startParam.replace("chek_id=", "");
+      navigate(`/chek?id=${id}`);
+      return;
+    }
+
+    // 📌 IF IT COMES WITHOUT = (check alternate)
+    const maybe = startParam?.split("_");
+    if (maybe?.length === 2 && maybe[0] === "chek") {
+      navigate(`/chek?id=${maybe[1]}`);
+      return;
+    }
+
   }, [navigate]);
 
   return null;
