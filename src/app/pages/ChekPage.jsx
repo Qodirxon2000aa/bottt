@@ -32,12 +32,12 @@ export default function ChekPage() {
             <span>Buyurtma id</span>
             <strong>38</strong>
           </div>
-
+            <hr />
           <div className="check-row">
             <span>Stars</span>
             <strong className="stars">✨ 100</strong>
           </div>
-
+            <hr />
           <div className="check-row">
             <span>Summa</span>
             <strong>22 000 UZS</strong>
