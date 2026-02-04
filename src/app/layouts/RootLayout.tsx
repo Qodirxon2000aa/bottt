@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from '@/app/components/BottomNav';
-import ChekListener from "@/app/pages/ChekListener";
 
 export function RootLayout() {
   const location = useLocation();
@@ -11,12 +10,12 @@ export function RootLayout() {
   return (
     <div className="min-h-screen bg-background pb-16">
       <div className="max-w-md mx-auto">
-        <ChekListener />
+       
         <Outlet />
+        <BottomNav />
       </div>
 
-      {/* 🔻 footer shart bilan */}
-      {!hideBottomNav && <BottomNav />}
+       
     </div>
   );
 }

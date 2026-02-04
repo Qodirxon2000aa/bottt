@@ -5,11 +5,11 @@ export function BottomNav() {
   const location = useLocation();
   
   const navItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/buy', icon: Sparkles, label: 'Buy Stars' },
-    { path: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
-    { path: '/history', icon: History, label: 'History' },
-    { path: '/profile', icon: User, label: 'Profile' }
+    { path: '/', icon: Home, label: 'Bosh sahifa' },
+    { path: '/buy', icon: Sparkles, label: 'Stars' },
+    { path: '/leaderboard', icon: Trophy, label: 'Reyting' },
+    { path: '/history', icon: History, label: 'Tarix' },
+    { path: '/profile', icon: User, label: 'Profil' }
   ];
   
   return (

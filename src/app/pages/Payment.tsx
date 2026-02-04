@@ -5,9 +5,9 @@ type PaymentMethod = "payme" | "uzcard" | "click" | "tonkeeper";
 
 const PaymentImages = {
   payme: "https://api.logobank.uz/media/logos_preview/payme-01.png",
-  uzcard: "https://pay2.octo.uz/assets/methods/uzcard-humo.png",
+  uzcard: "https://i.ibb.co/Z1Wk441P/image-Photoroom.png",
   click: "https://api.logobank.uz/media/logos_preview/Click-01_0xvqWH8.png",
-  tonkeeper: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTluPiUtNXlU5GDIKQnAD8kYQ5Qzv8OM3fcxA&s",
+  tonkeeper: "https://i.ibb.co/jkLrSV3X/image-Photoroom-1.png",
 };
 
 export default function Payment() {
