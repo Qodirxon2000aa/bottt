@@ -7,6 +7,8 @@ import { HistoryPage } from '@/app/pages/HistoryPage';
 import { ProfilePage } from '@/app/pages/ProfilePage';
 import { AdminPanelPage } from '@/app/pages/AdminPanelPage';
 import Payment from '@/app/pages/Payment';
+import Ton from '@/app/pages/Ton';
+
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
       { path: 'profile', Component: ProfilePage },
       { path: 'admin', Component: AdminPanelPage },
       { path: 'payment', Component: Payment },
+      { path: 'ton', Component: Ton },
+      
 
      
     ]

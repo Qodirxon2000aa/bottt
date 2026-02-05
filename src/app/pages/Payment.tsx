@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTelegram } from "../context/TelegramContext";
 import "../../styles/Payment.css";
 
 type PaymentMethod = "payme" | "uzcard" | "click" | "tonkeeper";
@@ -11,6 +12,7 @@ const PaymentImages = {
 };
 
 export default function Payment() {
+  const { user } = useTelegram();
   const [method, setMethod] = useState<PaymentMethod>("click");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
@@ -32,25 +34,63 @@ export default function Payment() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const amountNum = parseFloat(amount);
     if (!amount || isNaN(amountNum)) {
       setError("To'lov miqdorini kiriting");
       return;
     }
-    if (amountNum < 1000) {
-      setError("To'lov miqdori 1000 so'mdan kam bo'lmasligi kerak");
+    if (amountNum < 2000) {
+      setError("To'lov miqdori 2000 so'mdan kam bo'lmasligi kerak");
       return;
     }
-    if (amountNum > 10000000) {
-      setError("To'lov miqdori 10,000,000 so'mdan oshmasligi kerak");
+    if (amountNum > 1000000) {
+      setError("To'lov miqdori 1,000,000 so'mdan oshmasligi kerak");
       return;
     }
 
     setError("");
     console.log("To'lov usuli:", method);
     console.log("Summa:", amountNum);
-    alert(`${method.toUpperCase()} orqali ${amount} so'm to'lov amalga oshirildi!`);
+
+    // Agar Tonkeeper tanlangan bo'lsa, API ga so'rov yuborish
+    if (method === "tonkeeper") {
+      try {
+        if (!user?.id) {
+          setError("Foydalanuvchi topilmadi");
+          return;
+        }
+
+        const apiUrl = `https://m4746.myxvest.ru/webapp/payments/tonpay.php?user_id=${user.id}&amount=${amountNum}`;
+        
+        console.log("📡 Sending request to:", apiUrl);
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        console.log("📡 API Response:", data);
+        
+        if (data.status === "ok") {
+          // API dan kelgan ma'lumotlarni Ton.jsx ga yuborish
+          const tonUrl = `/ton?` +
+            `user_id=${user.id}&` +
+            `amount=${amountNum}&` +
+            `payment_id=${data.payment_id || ''}&` +
+            `sum=${data.sum || amountNum}&` +
+            `ton=${data.ton || ''}&` +
+            `link=${encodeURIComponent(data.link || '')}`;
+          
+          window.location.href = tonUrl;
+        } else {
+          setError(data.message || "To'lovda xatolik yuz berdi");
+        }
+      } catch (err) {
+        console.error("❌ Payment error:", err);
+        setError("To'lov yuborishda xatolik yuz berdi");
+      }
+    } else {
+      alert(`${method.toUpperCase()} orqali ${amount} so'm to'lov amalga oshirildi!`);
+    }
   };
 
   return (
@@ -72,7 +112,7 @@ export default function Payment() {
       {/* Shartlar */}
       <div className="payment-input-block" style={{ marginBottom: 20 }}>
         <p className="payment-info-text">
-          ℹ️ To'lov miqdori 1000 so'mdan kam va 10,000,000 so'mdan oshmasligi kerak
+          ℹ️ To'lov miqdori 2000 so'mdan kam va 1,000,000 so'mdan oshmasligi kerak
         </p>
       </div>
 
