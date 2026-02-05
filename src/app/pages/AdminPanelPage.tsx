@@ -172,6 +172,36 @@ export function AdminPanelPage() {
         </Card>
 
         {/* ===================== STATS ===================== */}
+
+                    <Card>
+  <CardHeader>
+    <CardTitle>Boshqa narxlar</CardTitle>
+    <CardDescription>
+      Premium, TON va referal sozlamalari
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent className="space-y-4">
+    {[
+      { label: '3 oylik Premium', key: '3oylik', type: '3oy', suffix: 'UZS' },
+      { label: '6 oylik Premium', key: '6oylik', type: '6oy', suffix: 'UZS' },
+      { label: '12 oylik Premium', key: '12oylik', type: '12oy', suffix: 'UZS' },
+      { label: 'TON kursi', key: 'tonkurs', type: 'ton', suffix: 'UZS' },
+      { label: 'Referal narxi', key: 'referal_price', type: 'sender', suffix: 'UZS' },
+    ].map((item) => (
+      <PriceBox
+        key={item.type}
+        label={item.label}
+        settingKey={item.key}
+        type={item.type}
+        suffix={item.suffix}
+      />
+    ))}
+  </CardContent>
+</Card>
+
+
+
         <Card>
           <CardHeader>
             <CardTitle>Tezkor statistika</CardTitle>
@@ -221,32 +251,7 @@ export function AdminPanelPage() {
         </Card>
 
         {/* ===================== OTHER PRICES ===================== */}
-<Card>
-  <CardHeader>
-    <CardTitle>Boshqa narxlar</CardTitle>
-    <CardDescription>
-      Premium, TON va referal sozlamalari
-    </CardDescription>
-  </CardHeader>
 
-  <CardContent className="space-y-4">
-    {[
-      { label: '3 oylik Premium', key: '3oylik', type: '3oy', suffix: 'UZS' },
-      { label: '6 oylik Premium', key: '6oylik', type: '6oy', suffix: 'UZS' },
-      { label: '12 oylik Premium', key: '12oylik', type: '12oy', suffix: 'UZS' },
-      { label: 'TON kursi', key: 'tonkurs', type: 'ton', suffix: 'UZS' },
-      { label: 'Referal narxi', key: 'referal_price', type: 'sender', suffix: 'UZS' },
-    ].map((item) => (
-      <PriceBox
-        key={item.type}
-        label={item.label}
-        settingKey={item.key}
-        type={item.type}
-        suffix={item.suffix}
-      />
-    ))}
-  </CardContent>
-</Card>
 
       </div>
     </div>
