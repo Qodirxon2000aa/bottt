@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useApp } from '@/app/context/AppContext';
 import { TopBar } from '@/app/components/ui/TopBar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/Card';
 import { Button } from '@/app/components/ui/Button';
@@ -17,9 +16,11 @@ import { format } from 'date-fns';
 
 export function AdminPanelPage() {
   const navigate = useNavigate();
-  const { user, currentRate, lastRateUpdate, updateRate } = useApp();
 
-  const [newRate, setNewRate] = useState(currentRate?.toString() ?? "");
+  /* ===================== RATE STATE (LOCAL) ===================== */
+  const [currentRate, setCurrentRate] = useState<number | null>(null);
+  const [lastRateUpdate, setLastRateUpdate] = useState<Date | null>(null);
+  const [newRate, setNewRate] = useState("");
 
   /* ===================== STATS STATE ===================== */
   const [stats, setStats] = useState<any>(null);
@@ -39,7 +40,7 @@ export function AdminPanelPage() {
         } else {
           toast.error('Statistika yuklanmadi');
         }
-      } catch (err) {
+      } catch {
         toast.error('Statistika serverida xatolik');
       } finally {
         setStatsLoading(false);
@@ -49,23 +50,33 @@ export function AdminPanelPage() {
     fetchStats();
   }, []);
 
-  /* ===================== LOADING ===================== */
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg">Ma'lumotlar yuklanmoqda...</p>
-      </div>
-    );
-  }
+  /* ===================== FETCH CURRENT RATE ===================== */
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const res = await fetch(
+          'https://m4746.myxvest.ru/webapp/settings.php'
+        );
+        const data = await res.json();
 
-  /* ===================== ADMIN CHECK ===================== */
-  if (!user.isAdmin) {
-    navigate('/');
-    return null;
-  }
+        if (data.ok && data.settings?.price) {
+          const rate = Number(data.settings.price);
+          if (!isNaN(rate) && rate > 0) {
+            setCurrentRate(rate);
+            setNewRate(String(rate));
+            setLastRateUpdate(new Date());
+          }
+        }
+      } catch {
+        toast.error('Kursni yuklashda xatolik');
+      }
+    };
+
+    fetchRate();
+  }, []);
 
   /* ===================== RATE UPDATE ===================== */
-  const handleUpdateRate = () => {
+  const handleUpdateRate = async () => {
     const rate = parseInt(newRate);
     if (isNaN(rate) || rate <= 0) {
       toast.error('Noto‘g‘ri qiymat', {
@@ -74,10 +85,25 @@ export function AdminPanelPage() {
       return;
     }
 
-    updateRate(rate);
-    toast.success('Kurs yangilandi', {
-      description: `1 ⭐ = ${new Intl.NumberFormat('uz-UZ').format(rate)} UZS`
-    });
+    try {
+      const res = await fetch(
+        `https://m4746.myxvest.ru/webapp/setdata.php?type=star&value=${rate}`
+      );
+      const data = await res.json();
+
+      if (data.ok) {
+        setCurrentRate(rate);
+        setLastRateUpdate(new Date());
+
+        toast.success('Kurs yangilandi', {
+          description: `1 ⭐ = ${new Intl.NumberFormat('uz-UZ').format(rate)} UZS`
+        });
+      } else {
+        toast.error('API kursni qabul qilmadi');
+      }
+    } catch {
+      toast.error('Serverga ulanishda xatolik');
+    }
   };
 
   return (
@@ -183,7 +209,6 @@ export function AdminPanelPage() {
                   </p>
                 </div>
 
-                {/* 🆕 BUGUNGI SAVDO */}
                 <div className="p-3 bg-primary/10 rounded-lg col-span-2">
                   <p className="text-xs text-muted-foreground">Bugungi savdo</p>
                   <p className="text-3xl font-bold text-primary">
@@ -194,7 +219,117 @@ export function AdminPanelPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* ===================== OTHER PRICES ===================== */}
+<Card>
+  <CardHeader>
+    <CardTitle>Boshqa narxlar</CardTitle>
+    <CardDescription>
+      Premium, TON va referal sozlamalari
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent className="space-y-4">
+    {[
+      { label: '3 oylik Premium', key: '3oylik', type: '3oy', suffix: 'UZS' },
+      { label: '6 oylik Premium', key: '6oylik', type: '6oy', suffix: 'UZS' },
+      { label: '12 oylik Premium', key: '12oylik', type: '12oy', suffix: 'UZS' },
+      { label: 'TON kursi', key: 'tonkurs', type: 'ton', suffix: 'UZS' },
+      { label: 'Referal narxi', key: 'referal_price', type: 'sender', suffix: 'UZS' },
+    ].map((item) => (
+      <PriceBox
+        key={item.type}
+        label={item.label}
+        settingKey={item.key}
+        type={item.type}
+        suffix={item.suffix}
+      />
+    ))}
+  </CardContent>
+</Card>
+
       </div>
+    </div>
+  );
+}
+
+
+function PriceBox({
+  label,
+  settingKey,
+  type,
+  suffix,
+}: {
+  label: string;
+  settingKey: string;
+  type: string;
+  suffix: string;
+}) {
+  const [value, setValue] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadValue = async () => {
+      try {
+        const res = await fetch(
+          'https://m4746.myxvest.ru/webapp/settings.php'
+        );
+        const data = await res.json();
+
+        if (data.ok && data.settings?.[settingKey]) {
+          setValue(String(data.settings[settingKey]));
+        }
+      } catch {
+        toast.error(`${label} yuklanmadi`);
+      }
+    };
+
+    loadValue();
+  }, []);
+
+  const saveValue = async () => {
+    const num = Number(value);
+    if (isNaN(num) || num < 0) {
+      toast.error('Noto‘g‘ri qiymat');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `https://m4746.myxvest.ru/webapp/setdata.php?type=${type}&value=${num}`
+      );
+      const data = await res.json();
+
+      if (data.ok) {
+        toast.success(`${label} yangilandi`, {
+          description: `${num.toLocaleString('uz-UZ')} ${suffix}`,
+        });
+      } else {
+        toast.error(`${label} saqlanmadi`);
+      }
+    } catch {
+      toast.error('Server xatoligi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-end gap-3 p-3 rounded-lg bg-accent/20">
+      <div className="flex-1">
+        <p className="text-sm font-medium">{label}</p>
+        <Input
+          type="number"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Qiymat"
+        />
+      </div>
+
+      <Button onClick={saveValue} disabled={loading}>
+        <Save className="w-4 h-4" />
+      </Button>
     </div>
   );
 }
