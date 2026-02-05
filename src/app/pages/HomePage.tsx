@@ -121,11 +121,11 @@ export function HomePage() {
                 <p className="text-sm font-medium">To'ldirish</p>
               </button>
               <button
-                onClick={() => navigate('/history')}
+                onClick={() => navigate('/payhistory')}
                 className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all text-left"
               >
                 <History className="w-5 h-5 mb-2" />
-                <p className="text-sm font-medium">Tarix</p>
+                <p className="text-sm font-medium">To'lovlar</p>
               </button>
             </div>
           </CardContent>

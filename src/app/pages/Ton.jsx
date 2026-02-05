@@ -8,44 +8,10 @@ export default function Ton() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentStatus, setCurrentStatus] = useState("pending");
-  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [showPaidText, setShowPaidText] = useState(false);
 
   const paymentIdRef = useRef(null);
   const intervalRef = useRef(null);
-
-  // keyframes bir marta qo'shilishi uchun
-  useEffect(() => {
-    if (document.getElementById("success-anim-styles")) return;
-
-    const style = document.createElement("style");
-    style.id = "success-anim-styles";
-    style.textContent = `
-      @keyframes successPop {
-        0%   { transform: scale(0.4); opacity: 0; }
-        60%  { transform: scale(1.15); opacity: 1; }
-        100% { transform: scale(1); }
-      }
-      @keyframes checkmarkAppear {
-        0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
-        50%  { transform: scale(1.3) rotate(15deg); }
-        100% { transform: scale(1) rotate(0deg); opacity: 1; }
-      }
-      @keyframes fadeInUp {
-        0%   { opacity: 0; transform: translateY(30px); }
-        100% { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes fadeOutSlow {
-        0%   { opacity: 1; }
-        100% { opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      const el = document.getElementById("success-anim-styles");
-      if (el) el.remove();
-    };
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -113,24 +79,17 @@ export default function Ton() {
             console.log(`[${now}] TO‘LOV TASDIQLANDI`);
 
             setOrderData(prev => ({ ...prev, status: "Tasdiqlangan" }));
-            setShowSuccessOverlay(true);
+            setShowPaidText(true);
 
             if (intervalRef.current) {
               clearInterval(intervalRef.current);
               intervalRef.current = null;
-              console.log(`Polling to‘xtatildi`);
             }
 
-            // 3 sekunddan keyin yashirinadi va redirect
+            // 3 soniya kutib /payment ga o'tish
             setTimeout(() => {
-              const overlay = document.getElementById("success-overlay");
-              if (overlay) overlay.style.animation = "fadeOutSlow 0.8s forwards";
-
-              setTimeout(() => {
-                setShowSuccessOverlay(false);
-                window.location.href = "/payment";
-              }, 900);
-            }, 3200);
+              window.location.href = "/payment";
+            }, 3000);
           }
         }
       } catch (err) {
@@ -176,7 +135,8 @@ export default function Ton() {
     );
   }
 
-  const isConfirmed = currentStatus === "paid" || orderData?.status === "Tasdiqlangan";
+  const isPending = currentStatus === "pending";
+  const isPaid = currentStatus === "paid" || showPaidText;
 
   return (
     <div style={styles.wrapper}>
@@ -189,12 +149,12 @@ export default function Ton() {
           <div
             style={{
               ...styles.verified,
-              background: isConfirmed ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)",
-              color: isConfirmed ? "#22c55e" : "#f59e0b",
+              background: isPaid ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)",
+              color: isPaid ? "#22c55e" : "#f59e0b",
             }}
           >
-            <span>{isConfirmed ? "✔" : "⏳"}</span>
-            {isConfirmed ? "Tasdiqlangan" : "Kutilmoqda"}
+            <span>{isPaid ? "✔" : "⏳"}</span>
+            {isPaid ? "Tasdiqlangan" : "Kutilmoqda"}
           </div>
         </div>
 
@@ -221,8 +181,18 @@ export default function Ton() {
 
           <div style={styles.row}>
             <span>Status</span>
-            <strong style={isConfirmed ? styles.success : styles.pending}>
-              {isConfirmed ? "Tasdiqlangan" : "Kutilmoqda"}
+            <strong
+              style={{
+                ...styles.statusText,
+                color: isPaid ? "#22c55e" : "#f59e0b",
+              }}
+            >
+              {isPaid ? "To'landi" : (
+                <>
+                  Kutilmoqda
+                  <span className="ellipsis">...</span>
+                </>
+              )}
             </strong>
           </div>
 
@@ -232,70 +202,29 @@ export default function Ton() {
           </div>
         </div>
 
-        {!isConfirmed && (
+        {!isPaid && (
           <button style={styles.paymentButton} onClick={handlePayment}>
             💎 To'lov qilish
           </button>
         )}
       </div>
 
-      {/* Muvaffaqiyatli to‘lov overlay */}
-      {showSuccessOverlay && (
-        <div
-          id="success-overlay"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(34,197,94,0.96)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            opacity: 1,
-            transition: "opacity 0.8s ease",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "center",
-              color: "white",
-              animation: "successPop 0.9s ease-out forwards",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "140px",
-                marginBottom: "20px",
-                fontWeight: "bold",
-                animation: "checkmarkAppear 1.1s ease-out forwards",
-              }}
-            >
-              ✓
-            </div>
-            <h2
-              style={{
-                fontSize: "34px",
-                margin: "0 0 12px 0",
-                fontWeight: 700,
-                animation: "fadeInUp 0.9s ease-out forwards 0.4s",
-                opacity: 0,
-              }}
-            >
-              To'lov tasdiqlandi!
-            </h2>
-            <p
-              style={{
-                fontSize: "18px",
-                opacity: 0.9,
-                animation: "fadeInUp 1s ease-out forwards 0.7s",
-                opacity: 0,
-              }}
-            >
-              Starsbot hisobingizga qo‘shildi
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Oddiy CSS uchun global style (ellipsis animatsiyasi) */}
+      <style jsx global>{`
+        .ellipsis {
+          display: inline-block;
+          width: 1em;
+          animation: ellipsis 1.5s infinite;
+          overflow: hidden;
+          vertical-align: bottom;
+        }
+        @keyframes ellipsis {
+          0%   { content: "."; }
+          33%  { content: ".."; }
+          66%  { content: "..."; }
+          100% { content: "."; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -380,6 +309,11 @@ const styles = {
   success: {
     color: "#22c55e",
     fontWeight: "700",
+  },
+  statusText: {
+    fontWeight: "700",
+    minWidth: "100px",
+    textAlign: "right",
   },
   paymentButton: {
     width: "100%",

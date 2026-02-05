@@ -40,7 +40,7 @@ export default function Payment() {
       setError("To'lov miqdorini kiriting");
       return;
     }
-    if (amountNum < 2000) {
+    if (amountNum < 1600) {
       setError("To'lov miqdori 2000 so'mdan kam bo'lmasligi kerak");
       return;
     }
