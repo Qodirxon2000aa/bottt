@@ -224,14 +224,7 @@ export default function HistoryPage() {
                     </Badge>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold flex items-center gap-1">
-                      {tx.Ton} Ton
-                    </span>
-                    <Badge variant={statusCfg.variant}>
-                      {statusCfg.label}
-                    </Badge>
-                  </div>
+               
 
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" />
