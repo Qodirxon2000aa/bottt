@@ -29,7 +29,7 @@ const statusMap = {
     icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
   },
   failed: {
-    label: 'Muvaffaqiyatsiz',
+    label: 'Bekor qilingan',
     variant: 'destructive',
     icon: <XCircle className="w-4 h-4 text-destructive" />,
   },
@@ -183,14 +183,9 @@ export default function HistoryPage() {
             selected={filter === 'failed'}
             onClick={() => setFilter('failed')}
           >
-            Muvaffaqiyatsiz
-          </Chip>
-          <Chip
-            selected={filter === 'cancel'}
-            onClick={() => setFilter('cancel')}
-          >
             Bekor qilingan
           </Chip>
+          
         </ChipGroup>
 
         {filteredPayments.length ? (
