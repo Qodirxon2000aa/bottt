@@ -309,7 +309,7 @@ useEffect(() => {
       id: fakeId,
       first_name: "Qodirxon",
       last_name: "Dev",
-      username: "@qiyossiz",
+      username: "@behissiyot",
       photo_url: null,
       isTelegram: false,
     });

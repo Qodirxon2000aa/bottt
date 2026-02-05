@@ -212,7 +212,7 @@ export default function HistoryPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="font-semibold flex items-center gap-1">
-                      {tx.amount} So'm 
+                      {tx.amount} UZS
                     </span>
                     <Badge variant={statusCfg.variant}>
                       {statusCfg.label}
@@ -301,7 +301,7 @@ export default function HistoryPage() {
                       <div className="flex justify-between items-center text-base">
                         <span className="text-gray-400">Miqdori</span>
                         <span className="font-medium flex items-center gap-2 text-lg">
-                          {selectedPayment.amount} So'm
+                          {selectedPayment.amount} UZS
                         </span>
                       </div>
 
