@@ -16,7 +16,7 @@ import {
 import { format } from 'date-fns';
 import * as Dialog from '@radix-ui/react-dialog';
 
-/* ================= STATUS MAP (JS VERSION) ================= */
+/* ================= STATUS MAP ================= */
 const statusMap = {
   paid: {
     label: 'To‘landi',
@@ -30,6 +30,16 @@ const statusMap = {
   },
   failed: {
     label: 'Muvaffaqiyatsiz',
+    variant: 'destructive',
+    icon: <XCircle className="w-4 h-4 text-destructive" />,
+  },
+  cancel: {
+    label: 'Bekor qilingan',
+    variant: 'destructive',
+    icon: <XCircle className="w-4 h-4 text-destructive" />,
+  },
+  cancelled: {
+    label: 'Bekor qilingan',
     variant: 'destructive',
     icon: <XCircle className="w-4 h-4 text-destructive" />,
   },
@@ -49,7 +59,10 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState('all');
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  /* ================= FETCH ================= */
+  // Telegram WebApp obyektini olish (Mini App ichida mavjud bo'ladi)
+  const tg = window.Telegram?.WebApp;
+
+  /* ================= FETCH PAYMENTS ================= */
   useEffect(() => {
     if (!user?.id) {
       setError('Foydalanuvchi ID topilmadi');
@@ -68,7 +81,7 @@ export default function HistoryPage() {
 
         const data = await res.json();
         if (data.ok !== true) {
-          throw new Error(data.description || 'API xatosi');
+          throw new Error(data.description || data.message || 'API xatosi');
         }
 
         setPayments(data.payments || []);
@@ -84,7 +97,14 @@ export default function HistoryPage() {
 
   /* ================= HELPERS ================= */
   const getStatusConfig = (status) => {
-    const key = status?.toLowerCase?.().trim();
+    if (!status) return statusMap.default;
+
+    const key = status.toLowerCase().trim();
+
+    if (key === 'cancel' || key === 'cancelled') {
+      return statusMap.cancel;
+    }
+
     return statusMap[key] || statusMap.default;
   };
 
@@ -99,16 +119,29 @@ export default function HistoryPage() {
     }
   };
 
-  const formatUZS = (stars) => {
-    const rate = 150;
-    return new Intl.NumberFormat('uz-UZ').format(stars * rate);
+  const handlePay = (link) => {
+    if (link && tg) {
+      // Telegram Mini App ichida tashqi linkni ochish
+      tg.openLink(link);
+    } else if (link) {
+      // fallback: oddiy brauzerda ochish
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }
   };
 
-  const filteredPayments = payments.filter((p) =>
-    filter === 'all' ? true : p.status?.toLowerCase() === filter
-  );
+  const filteredPayments = payments.filter((p) => {
+    if (filter === 'all') return true;
 
-  /* ================= STATES ================= */
+    const status = p.status?.toLowerCase?.().trim() || '';
+
+    if (filter === 'cancel') {
+      return status === 'cancel' || status === 'cancelled';
+    }
+
+    return status === filter;
+  });
+
+  /* ================= LOADING / ERROR STATES ================= */
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -129,7 +162,7 @@ export default function HistoryPage() {
     );
   }
 
-  /* ================= UI ================= */
+  /* ================= MAIN UI ================= */
   return (
     <div className="min-h-screen bg-background">
       <TopBar title="To‘lovlar tarixi" subtitle="Barcha tranzaksiyalar" />
@@ -154,6 +187,12 @@ export default function HistoryPage() {
           >
             Muvaffaqiyatsiz
           </Chip>
+          <Chip
+            selected={filter === 'cancel'}
+            onClick={() => setFilter('cancel')}
+          >
+            Bekor qilingan
+          </Chip>
         </ChipGroup>
 
         {filteredPayments.length ? (
@@ -168,25 +207,20 @@ export default function HistoryPage() {
                 className="cursor-pointer hover:shadow-md transition"
               >
                 <div className="p-4 space-y-3">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-medium">{tx.type}</p>
+                      <p className="font-medium">To'lov turi: {tx.type || 'To‘lov'}</p>
                       <p className="text-xs text-muted-foreground">
-                        Buyurtma #{tx.order_id}
+                        Raqami: #{tx.order_id}
                       </p>
                     </div>
                     {statusCfg.icon}
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <div className="flex gap-3">
-                      <span className="font-semibold">
-                        <Sparkles className="inline w-4 h-4" /> {tx.amount}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {formatUZS(tx.amount)} UZS
-                      </span>
-                    </div>
+                    <span className="font-semibold flex items-center gap-1">
+                      {tx.amount} <Sparkles className="w-4 h-4" />
+                    </span>
                     <Badge variant={statusCfg.variant}>
                       {statusCfg.label}
                     </Badge>
@@ -204,35 +238,89 @@ export default function HistoryPage() {
           <EmptyState
             icon={<History className="w-16 h-16" />}
             title="Maʼlumot yo‘q"
-            description="Hozircha tranzaksiya mavjud emas"
+            description={
+              filter === 'all'
+                ? 'Hozircha tranzaksiya mavjud emas'
+                : `Bu filtr bo‘yicha (${statusMap[filter]?.label || filter}) tranzaksiya topilmadi`
+            }
           />
         )}
       </div>
 
-      {/* MODAL */}
+      {/* ================= MODAL ================= */}
       <Dialog.Root
         open={!!selectedPayment}
-        onOpenChange={(o) => !o && setSelectedPayment(null)}
+        onOpenChange={(open) => !open && setSelectedPayment(null)}
       >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/60 z-50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
-            {selectedPayment && (
-              <Card className="p-6 space-y-4">
-                <h2 className="text-lg font-semibold text-center">
-                  {selectedPayment.type}
-                </h2>
-                <p className="text-center text-muted-foreground">
-                  #{selectedPayment.order_id}
-                </p>
+            {selectedPayment &&
+              (() => {
+                const statusCfg = getStatusConfig(selectedPayment.status);
+                const dateObj = parseApiDate(selectedPayment.date);
+                const isPending = selectedPayment.status?.toLowerCase().trim() === 'pending';
+                const hasLink = !!selectedPayment.link;
 
-                <Dialog.Close asChild>
-                  <button className="w-full h-11 bg-secondary rounded-xl">
-                    Yopish
-                  </button>
-                </Dialog.Close>
-              </Card>
-            )}
+                return (
+                  <Card className="p-6 space-y-5 bg-card text-card-foreground rounded-2xl shadow-xl">
+                    <div className="text-center">
+                      <h2 className="text-xl font-bold">
+                        To'lov turi: {selectedPayment.type || 'To‘lov'}
+                      </h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        raqami: #{selectedPayment.order_id}
+                      </p>
+                    </div>
+
+                    <div className="space-y-3 border-t border-b border-border py-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Holati:</span>
+                        <Badge variant={statusCfg.variant}>
+                          {statusCfg.label}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Miqdori:</span>
+                        <span className="font-medium flex items-center gap-1">
+                          {selectedPayment.amount} <Sparkles className="w-4 h-4" />
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Sana:</span>
+                        <span>{format(dateObj, 'dd MMMM yyyy, HH:mm')}</span>
+                      </div>
+                      {selectedPayment.transaction_id && (
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="text-muted-foreground shrink-0">
+                            Tranzaksiya ID:
+                          </span>
+                          <span className="font-mono text-xs break-all text-right">
+                            {selectedPayment.transaction_id}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <Dialog.Close asChild>
+                        <button className="w-full h-11 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition">
+                          Yopish
+                        </button>
+                      </Dialog.Close>
+
+                      {isPending && hasLink && (
+                        <button
+                          onClick={() => handlePay(selectedPayment.link)}
+                          className="w-full h-11 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
+                        >
+                          To‘lov qilish
+                        </button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })()}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
