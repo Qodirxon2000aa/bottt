@@ -137,7 +137,7 @@ export function AdminPanelPage() {
               <CardTitle>Kurs boshqaruvi</CardTitle>
             </div>
             <CardDescription>
-              Yulduz → UZS kursini o‘rnatish
+              Stars → UZS kursini o‘rnatish
             </CardDescription>
           </CardHeader>
 
@@ -228,12 +228,12 @@ export function AdminPanelPage() {
                 </div>
 
                 <div className="p-3 bg-accent/20 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Sotilgan yulduzlar</p>
+                  <p className="text-xs text-muted-foreground">Sotilgan Starslar</p>
                   <p className="text-2xl font-bold">{stats.stars.sold}</p>
                 </div>
 
                 <div className="p-3 bg-accent/20 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Yulduzlar summasi</p>
+                  <p className="text-xs text-muted-foreground">Starslar summasi</p>
                   <p className="text-2xl font-bold">
                     {stats.stars.summa.toLocaleString('uz-UZ')}
                   </p>
