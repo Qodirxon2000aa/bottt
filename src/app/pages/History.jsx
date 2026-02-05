@@ -59,7 +59,7 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState('all');
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  // Telegram WebApp obyektini olish (Mini App ichida mavjud bo'ladi)
+  // Telegram WebApp obyektini olish
   const tg = window.Telegram?.WebApp;
 
   /* ================= FETCH PAYMENTS ================= */
@@ -121,10 +121,8 @@ export default function HistoryPage() {
 
   const handlePay = (link) => {
     if (link && tg) {
-      // Telegram Mini App ichida tashqi linkni ochish
       tg.openLink(link);
     } else if (link) {
-      // fallback: oddiy brauzerda ochish
       window.open(link, '_blank', 'noopener,noreferrer');
     }
   };
@@ -219,7 +217,16 @@ export default function HistoryPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="font-semibold flex items-center gap-1">
-                      {tx.amount} <Sparkles className="w-4 h-4" />
+                      {tx.amount} So'm 
+                    </span>
+                    <Badge variant={statusCfg.variant}>
+                      {statusCfg.label}
+                    </Badge>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold flex items-center gap-1">
+                      {tx.Ton} Ton
                     </span>
                     <Badge variant={statusCfg.variant}>
                       {statusCfg.label}
@@ -253,74 +260,108 @@ export default function HistoryPage() {
         onOpenChange={(open) => !open && setSelectedPayment(null)}
       >
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/60 z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
-            {selectedPayment &&
-              (() => {
-                const statusCfg = getStatusConfig(selectedPayment.status);
-                const dateObj = parseApiDate(selectedPayment.date);
-                const isPending = selectedPayment.status?.toLowerCase().trim() === 'pending';
-                const hasLink = !!selectedPayment.link;
+          <Dialog.Overlay className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" />
+          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {selectedPayment && (() => {
+              const statusCfg = getStatusConfig(selectedPayment.status);
+              const dateObj = parseApiDate(selectedPayment.date);
+              const isPending = selectedPayment.status?.toLowerCase().trim() === 'pending';
+              const hasLink = !!selectedPayment.link;
 
-                return (
-                  <Card className="p-6 space-y-5 bg-card text-card-foreground rounded-2xl shadow-xl">
-                    <div className="text-center">
-                      <h2 className="text-xl font-bold">
-                        To'lov turi: {selectedPayment.type || 'To‘lov'}
-                      </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        raqami: #{selectedPayment.order_id}
-                      </p>
+              // Avatar uchun birinchi harf (agar type bo'lsa, masalan "Tonkeeper" → T)
+              const avatarInitial = (selectedPayment.type || 'T').charAt(0).toUpperCase();
+
+              return (
+                <div className="w-full max-w-[380px] bg-[#0f0f17] text-white rounded-3xl overflow-hidden shadow-2xl border border-gray-800/50">
+                  {/* Header / Avatar qismi */}
+                  <div className="pt-10 pb-6 px-6 text-center">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-5xl font-bold shadow-xl">
+                      {avatarInitial}
                     </div>
 
-                    <div className="space-y-3 border-t border-b border-border py-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Holati:</span>
-                        <Badge variant={statusCfg.variant}>
+                    <h2 className="mt-5 text-2xl font-semibold">
+                      {selectedPayment.type || 'To‘lov'}
+                    </h2>
+
+                    <p className="text-gray-400 text-sm mt-1">
+                      #{selectedPayment.order_id}
+                    </p>
+
+                   
+                    
+                  </div>
+
+                  {/* Ma'lumotlar bloki */}
+                  <div className="px-6 pb-10 pt-4 bg-black/30 space-y-6">
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-center text-base">
+                        <span className="text-gray-400">Holati</span>
+                        <Badge
+                          variant={statusCfg.variant}
+                          className={
+                            statusCfg.variant === 'success'
+                              ? 'bg-green-600/30 text-green-400 border-green-500/30 px-4 py-1'
+                              : statusCfg.variant === 'warning'
+                              ? 'bg-yellow-600/30 text-yellow-400 border-yellow-500/30 px-4 py-1'
+                              : 'bg-red-600/30 text-red-400 border-red-500/30 px-4 py-1'
+                          }
+                        >
                           {statusCfg.label}
                         </Badge>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Miqdori:</span>
-                        <span className="font-medium flex items-center gap-1">
-                          {selectedPayment.amount} <Sparkles className="w-4 h-4" />
+
+                      <div className="flex justify-between items-center text-base">
+                        <span className="text-gray-400">Miqdori</span>
+                        <span className="font-medium flex items-center gap-2 text-lg">
+                          {selectedPayment.amount} So'm
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Sana:</span>
-                        <span>{format(dateObj, 'dd MMMM yyyy, HH:mm')}</span>
+
+                      <div className="flex justify-between items-center text-base">
+                        <span className="text-gray-400">Ton</span>
+                        <span className="font-medium flex items-center gap-2 text-lg">
+                          {selectedPayment.ton} Ton
+                        </span>
                       </div>
+
+                      <div className="flex justify-between items-center text-base">
+                        <span className="text-gray-400">Sana</span>
+                        <span className="text-base">
+                          {format(dateObj, 'dd MMM yyyy • HH:mm')}
+                        </span>
+                      </div>
+
                       {selectedPayment.transaction_id && (
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="text-muted-foreground shrink-0">
-                            Tranzaksiya ID:
-                          </span>
-                          <span className="font-mono text-xs break-all text-right">
+                        <div className="flex justify-between items-start gap-3 text-sm pt-2">
+                          <span className="text-gray-400 shrink-0">Tranzaksiya ID</span>
+                          <span className="font-mono text-gray-300 break-all text-right">
                             {selectedPayment.transaction_id}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="space-y-3">
-                      <Dialog.Close asChild>
-                        <button className="w-full h-11 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition">
-                          Yopish
-                        </button>
-                      </Dialog.Close>
-
+                    {/* Tugmalar */}
+                    <div className="pt-6 space-y-4">
                       {isPending && hasLink && (
                         <button
                           onClick={() => handlePay(selectedPayment.link)}
-                          className="w-full h-11 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
+                          className="w-full py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-medium rounded-2xl transition text-lg shadow-lg"
                         >
                           To‘lov qilish
                         </button>
                       )}
+
+                      <Dialog.Close asChild>
+                        <button className="w-full py-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white font-medium rounded-2xl transition text-lg">
+                          Yopish
+                        </button>
+                      </Dialog.Close>
                     </div>
-                  </Card>
-                );
-              })()}
+                  </div>
+                </div>
+              );
+            })()}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
