@@ -9,6 +9,7 @@ import { AdminPanelPage } from '@/app/pages/AdminPanelPage';
 import Payment from '@/app/pages/Payment';
 import Ton from '@/app/pages/Ton';
 import History from '@/app/pages/History';
+import Premuim from './pages/Premuim'
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,8 @@ export const router = createBrowserRouter([
       { path: 'payment', Component: Payment },
       { path: 'ton', Component: Ton },
      { path: 'payhistory', Component: History },
+     { path: 'premium', Component: Premuim },
+
 
       
 
