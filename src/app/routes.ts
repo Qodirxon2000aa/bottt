@@ -9,7 +9,7 @@ import { AdminPanelPage } from '@/app/pages/AdminPanelPage';
 import Payment from '@/app/pages/Payment';
 import Ton from '@/app/pages/Ton';
 import History from '@/app/pages/History';
-import Premuim from './pages/Premuim'
+import Premuim from './pages/premuim'
 
 export const router = createBrowserRouter([
   {
