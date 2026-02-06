@@ -35,7 +35,7 @@ export function SummaryCard({
           {isPremium && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Tur</span>
-              <span className="font-medium">Premium Sovg‘a</span>
+              <span className="font-medium">Premium </span>
             </div>
           )}
 

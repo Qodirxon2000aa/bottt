@@ -160,7 +160,7 @@ export default function Premium() {
   return (
     <div className="min-h-screen">
       <TopBar
-        title="Premium / Stars Sotib olish"
+        title="Premium Sotib olish"
         subtitle="Tez va ishonchli"
         backButton={
           <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full hover:bg-accent flex items-center justify-center">
