@@ -244,115 +244,131 @@ export default function HistoryPage() {
 
       {/* ================= MODAL ================= */}
       <Dialog.Root
-        open={!!selectedPayment}
-        onOpenChange={(open) => !open && setSelectedPayment(null)}
-      >
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" />
-          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {selectedPayment && (() => {
-              const statusCfg = getStatusConfig(selectedPayment.status);
-              const dateObj = parseApiDate(selectedPayment.date);
-              const isPending = selectedPayment.status?.toLowerCase().trim() === 'pending';
-              const hasLink = !!selectedPayment.link;
+  open={!!selectedPayment}
+  onOpenChange={(open) => !open && setSelectedPayment(null)}
+>
+  <Dialog.Portal>
+    <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
 
-              // Avatar uchun birinchi harf (agar type bo'lsa, masalan "Tonkeeper" → T)
-              const avatarInitial = (selectedPayment.type || 'T').charAt(0).toUpperCase();
+    <Dialog.Content
+      className="
+        fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+        w-[92%] max-w-md z-50 
+        max-h-[90vh] overflow-y-auto 
+        rounded-2xl
+      "
+    >
+      {selectedPayment && (() => {
+        const statusCfg = getStatusConfig(selectedPayment.status);
+        const dateObj = parseApiDate(selectedPayment.date);
+        const isPending = selectedPayment.status?.toLowerCase().trim() === 'pending';
+        const hasLink = !!selectedPayment.link;
 
-              return (
-                <div className="w-full max-w-[380px] bg-[#0f0f17] text-white rounded-3xl overflow-hidden shadow-2xl border border-gray-800/50">
-                  {/* Header / Avatar qismi */}
-                  <div className="pt-10 pb-6 px-6 text-center">
-                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-5xl font-bold shadow-xl">
-                      {avatarInitial}
-                    </div>
+        const avatarInitial = (selectedPayment.type || 'T').charAt(0).toUpperCase();
 
-                    <h2 className="mt-5 text-2xl font-semibold">
-                      {selectedPayment.type || 'To‘lov'}
-                    </h2>
+        return (
+          <Card className="border-0 shadow-2xl bg-card text-card-foreground">
+            <div className="p-6 space-y-6">
 
-                    <p className="text-gray-400 text-sm mt-1">
-                      #{selectedPayment.order_id}
-                    </p>
-
-                   
-                    
-                  </div>
-
-                  {/* Ma'lumotlar bloki */}
-                  <div className="px-6 pb-10 pt-4 bg-black/30 space-y-6">
-                    <div className="space-y-5">
-                      <div className="flex justify-between items-center text-base">
-                        <span className="text-gray-400">Holati</span>
-                        <Badge
-                          variant={statusCfg.variant}
-                          className={
-                            statusCfg.variant === 'success'
-                              ? 'bg-green-600/30 text-green-400 border-green-500/30 px-4 py-1'
-                              : statusCfg.variant === 'warning'
-                              ? 'bg-yellow-600/30 text-yellow-400 border-yellow-500/30 px-4 py-1'
-                              : 'bg-red-600/30 text-red-400 border-red-500/30 px-4 py-1'
-                          }
-                        >
-                          {statusCfg.label}
-                        </Badge>
-                      </div>
-
-                      <div className="flex justify-between items-center text-base">
-                        <span className="text-gray-400">Miqdori</span>
-                        <span className="font-medium flex items-center gap-2 text-lg">
-                          {selectedPayment.amount} UZS
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-base">
-                        <span className="text-gray-400">Ton</span>
-                        <span className="font-medium flex items-center gap-2 text-lg">
-                          {selectedPayment.ton} Ton
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-base">
-                        <span className="text-gray-400">Sana</span>
-                        <span className="text-base">
-                          {format(dateObj, 'dd MMM yyyy • HH:mm')}
-                        </span>
-                      </div>
-
-                      {selectedPayment.transaction_id && (
-                        <div className="flex justify-between items-start gap-3 text-sm pt-2">
-                          <span className="text-gray-400 shrink-0">Tranzaksiya ID</span>
-                          <span className="font-mono text-gray-300 break-all text-right">
-                            {selectedPayment.transaction_id}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Tugmalar */}
-                    <div className="pt-6 space-y-4">
-                      {isPending && hasLink && (
-                        <button
-                          onClick={() => handlePay(selectedPayment.link)}
-                          className="w-full py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-medium rounded-2xl transition text-lg shadow-lg"
-                        >
-                          To‘lov qilish
-                        </button>
-                      )}
-
-                      <Dialog.Close asChild>
-                        <button className="w-full py-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white font-medium rounded-2xl transition text-lg">
-                          Yopish
-                        </button>
-                      </Dialog.Close>
-                    </div>
-                  </div>
+              {/* Header / Avatar */}
+              <div className="text-center">
+                <div className="
+                  w-16 h-16 mx-auto mb-4 
+                  rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 
+                  flex items-center justify-center 
+                  text-white text-2xl font-semibold
+                ">
+                  {avatarInitial}
                 </div>
-              );
-            })()}
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+
+                <Dialog.Title className="text-xl font-semibold">
+                  {selectedPayment.type || 'To‘lov'}
+                </Dialog.Title>
+
+                <Dialog.Description className="text-sm text-muted-foreground mt-1">
+                  #{selectedPayment.order_id}
+                </Dialog.Description>
+              </div>
+
+              {/* Status */}
+              <div className="flex justify-center">
+                <Badge
+                  variant={statusCfg.variant}
+                  className={`
+                    text-base px-5 py-1.5 flex items-center gap-2
+                    ${statusCfg.variant === 'success' ? 'bg-green-950/40 text-green-400 border-green-800/40' : ''}
+                    ${statusCfg.variant === 'warning' ? 'bg-yellow-950/40 text-yellow-400 border-yellow-800/40' : ''}
+                    ${statusCfg.variant === 'destructive' ? 'bg-red-950/40 text-red-400 border-red-800/40' : ''}
+                  `}
+                >
+                  {statusCfg.label}
+                </Badge>
+              </div>
+
+              {/* Asosiy ma’lumotlar */}
+              <div className="space-y-3 bg-accent/30 rounded-xl p-4">
+                <div className="flex justify-between py-2 border-b border-border/60">
+                  <span className="text-muted-foreground">Miqdori</span>
+                  <span className="font-semibold">{selectedPayment.amount} UZS</span>
+                </div>
+
+                <div className="flex justify-between py-2 border-b border-border/60">
+                  <span className="text-muted-foreground">Ton</span>
+                  <span className="font-semibold">{selectedPayment.ton} TON</span>
+                </div>
+
+                <div className="flex justify-between py-2 border-b border-border/60">
+                  <span className="text-muted-foreground">Sana</span>
+                  <span>{format(dateObj, 'dd MMM yyyy • HH:mm')}</span>
+                </div>
+
+                {selectedPayment.transaction_id && (
+                  <div className="flex justify-between py-2 border-b border-border/60">
+                    <span className="text-muted-foreground shrink-0">Tranzaksiya ID</span>
+                    <span className="font-mono text-sm break-all text-right text-muted-foreground/90">
+                      {selectedPayment.transaction_id}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Tugmalar */}
+              <div className="space-y-3 pt-2">
+                {isPending && hasLink && (
+                  <button
+                    onClick={() => handlePay(selectedPayment.link)}
+                    className="
+                      w-full h-11 
+                      bg-green-600 hover:bg-green-500 active:bg-green-700 
+                      text-white font-medium 
+                      rounded-xl transition-colors
+                    "
+                  >
+                    To‘lov qilish
+                  </button>
+                )}
+
+                <Dialog.Close asChild>
+                  <button
+                    className="
+                      w-full h-11 
+                      bg-secondary text-secondary-foreground 
+                      rounded-xl font-medium 
+                      hover:bg-secondary/90 transition-colors
+                    "
+                  >
+                    Yopish
+                  </button>
+                </Dialog.Close>
+              </div>
+
+            </div>
+          </Card>
+        );
+      })()}
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
     </div>
   );
 }
